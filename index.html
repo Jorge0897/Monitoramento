@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoramento PCP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #111;
+            margin: 0;
+            padding: 0;
+        }
+        .top-bar {
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(90deg, #181818, #23272f 100%);
+            padding: 8px 16px 4px 16px;
+            box-sizing: border-box;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.25);
+        }
+        .top-bar h1 {
+            color: #fff;
+            font-size: 1.2em;
+            margin: 0;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .top-bar h1 i {
+            color: #21aaff;
+            font-size: 1em;
+        }
+        #data-hora {
+            color: #21aaff;
+            font-size: 0.95em;
+            margin-left: 16px;
+            white-space: nowrap;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        label {
+            color: #c4c4c4;
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        select, input[type="number"] {
+            background-color: #222;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 0.95em;
+            outline: none;
+            transition: border 0.2s, box-shadow 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.10);
+        }
+        select:focus, input[type="number"]:focus {
+            border: 1.5px solid #21aaff;
+            box-shadow: 0 0 3px #21aaff44;
+            animation: pulse 0.7s;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(33,170,255,0.3); }
+            70% { box-shadow: 0 0 0 6px rgba(33,170,255,0); }
+            100% { box-shadow: 0 0 0 0 rgba(33,170,255,0); }
+        }
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='18' viewBox='0 0 24 24' width='18' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+            background-repeat: no-repeat;
+            background-position-x: 98%;
+            background-position-y: center;
+            padding-right: 24px;
+        }
+        option {
+            background-color: #222;
+            color: #fff;
+        }
+        #auto-switch {
+            accent-color: #21aaff;
+            width: 14px;
+            height: 14px;
+            vertical-align: middle;
+            margin-right: 2px;
+        }
+        .auto-switch-label i {
+            font-size: 0.95em;
+            transition: color 0.2s;
+        }
+        #auto-switch:checked + i {
+            animation: spin 1s linear infinite;
+            color: #21aaff;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0); }
+            100% { transform: rotate(360deg); }
+        }
+        #trocar-btn {
+            padding: 5px 14px;
+            font-size: 0.95em;
+            background: linear-gradient(90deg, #21aaff, #0070c1 100%);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            box-shadow: 0 1px 4px rgba(33,170,255,0.10);
+            transition: background 0.2s, box-shadow 0.15s, transform 0.10s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        #trocar-btn:hover, #fullscreen-btn:hover {
+            background: linear-gradient(90deg, #0070c1, #21aaff 100%);
+            box-shadow: 0 3px 10px rgba(33,170,255,0.18);
+            transform: scale(1.04);
+        }
+        #trocar-btn.flash {
+            animation: flashBtn 0.3s;
+        }
+        @keyframes flashBtn {
+            0% { background: #ff3333; }
+            100% { background: linear-gradient(90deg, #21aaff, #0070c1 100%);}
+        }
+        #iframe-container {
+            width: 100vw;
+            height: 95vh;
+            border: none;
+            box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.6);
+            background: #000;
+            margin-top: 0;
+            border-radius: 0 0 10px 10px;
+            transition: box-shadow 0.3s, filter 0.3s;
+        }
+        #iframe-container.anim {
+            box-shadow: 0px 0px 20px 5px #21aaff66;
+            filter: brightness(1.05) drop-shadow(0 0 4px #21aaff55);
+        }
+        #spinner {
+            display:none;
+            position:fixed;
+            top:50%;
+            left:50%;
+            transform:translate(-50%,-50%);
+            z-index:10;
+            background:rgba(0,0,0,0.2);
+            border-radius: 50%;
+            padding: 10px;
+        }
+        #spinner i {
+            font-size: 1.5em;
+        }
+        #fullscreen-btn {
+            display: none;
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            z-index: 20;
+            background: linear-gradient(90deg, #21aaff, #0070c1 100%);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            font-size: 1.2em;
+            box-shadow: 0 1px 4px rgba(33,170,255,0.15);
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, box-shadow 0.1s, transform 0.08s;
+        }
+        #fullscreen-btn:active {
+            transform: scale(0.95);
+        }
+        #intervalo.invalid {
+            border: 2px solid #ff3333;
+            background: #330000;
+            color: #fff;
+        }
+        #intervalo-msg {
+            color: #ff3333;
+            font-size: 0.85em;
+            margin-left: 4px;
+            display: none;
+        }
+        #timer-visual {
+            margin-left: 8px;
+            color: #21aaff;
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+        #notificacao-visual {
+            display:none;
+            position:fixed;
+            top:18px;
+            right:18px;
+            z-index:1000;
+            background:#21aaff;
+            color:#fff;
+            padding:8px 16px;
+            border-radius:8px;
+            box-shadow:0 1px 6px #21aaff99;
+            font-size:1em;
+            opacity: 1;
+            transition: opacity 0.6s;
+        }
+        /* Splash */
+        #splash {
+            position:fixed;
+            top:0;left:0;right:0;bottom:0;
+            background:linear-gradient(120deg,#181818 60%,#21a6ff 100%);
+            z-index:9999;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            flex-direction:column;
+            transition: opacity 0.7s;
+        }
+        @keyframes splashSpin {
+            0% { transform: rotate(0);}
+            100% { transform: rotate(360deg);}
+        }
+        @media (max-width: 900px) {
+            .top-bar {
+                flex-direction: column;
+                gap: 10px;
+                padding: 10px 4px 4px 4px;
+            }
+            .controls {
+                flex-wrap: wrap;
+                gap: 5px;
+                width: 100%;
+                justify-content: center;
+            }
+            #iframe-container {
+                height: 80vh;
+            }
+            #fullscreen-btn {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash de abertura -->
+    <div id="splash">
+        <img src="logo_dafiti_branco.png" alt="Logo" style="width:200px; height:auto; border-radius:12px; box-shadow:0 2px 12px #0008;">
+        <div style="color:#fff;font-size:1.3em;margin-top:18px;letter-spacing:1px;">Monitoramento PCP</div>
+    </div>
+
+    <div class="top-bar">
+        <h1>
+            <img src="logo_dafiti_branco.png" alt="Logo" style="height:28px; vertical-align:middle; margin-right:8px; border-radius:6px;">
+            <i class="fas fa-chart-line"></i> Monitoramento PCP
+        </h1>
+        <span id="data-hora"></span>
+        <div class="controls">
+            <label for="planilha-select" aria-label="Escolha a planilha"><i class="fas fa-table"></i></label>
+            <select id="planilha-select" aria-label="Lista de planilhas"></select>
+            <label class="auto-switch-label" aria-label="Troca automática">
+                <input type="checkbox" id="auto-switch" aria-label="Ativar troca automática">
+                <i class="fas fa-sync-alt"></i>
+            </label>
+            <label for="intervalo" aria-label="Intervalo em segundos"><i class="fas fa-clock"></i></label>
+            <input type="number" id="intervalo" value="60" min="5" max="600" step="1" style="width: 40px" aria-label="Intervalo de troca automática">
+            <span id="intervalo-msg">5-600</span>
+            <span id="timer-visual"></span>
+            <button id="trocar-btn" aria-label="Próxima planilha"><i class="fas fa-forward"></i></button>
+        </div>
+    </div>
+    <iframe id="iframe-container" src="" frameborder="0" title="Planilha selecionada"></iframe>
+    <div id="spinner"><i class="fas fa-spinner fa-spin" style="color:#21aaff"></i></div>
+    <button id="fullscreen-btn" aria-label="Abrir em tela cheia"><i class="fas fa-expand"></i></button>
+    <audio id="notificacao-audio" src="https://cdn.pixabay.com/audio/2022/03/15/audio_115b9b7b1b.mp3" preload="auto"></audio>
+    <div id="notificacao-visual">Planilha trocada!</div>
+
+    <script>
+        // Splash de abertura
+        window.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const splash = document.getElementById('splash');
+                splash.style.opacity = 0;
+                setTimeout(() => splash.style.display = 'none', 700);
+            }, 1200);
+        });
+
+        // Data e hora atual
+        function atualizarDataHora() {
+            const dataHoraSpan = document.getElementById('data-hora');
+            const agora = new Date();
+            const data = agora.toLocaleDateString('pt-BR');
+            const hora = agora.toLocaleTimeString('pt-BR');
+            dataHoraSpan.textContent = `${data} ${hora}`;
+        }
+        setInterval(atualizarDataHora, 1000);
+        atualizarDataHora();
+
+        const arquivos = [
+            { nome: "Base p. Data", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3JC5-FEU2jjyEiXATzDqDnPPTUQ1CdJ2Au-VpDIYmn50YVpf41SUUT-Apf1ULsASbLSq56RG6zyh3/pubhtml?gid=1438916736&single=true" },
+            { nome: "Base Oficial", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3JC5-FEU2jjyEiXATzDqDnPPTUQ1CdJ2Au-VpDIYmn50YVpf41SUUT-Apf1ULsASbLSq56RG6zyh3/pubhtml?gid=1510322153&single=true" },
+            { nome: "Dashboard Geral - Processos", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1594703048&single=true" },
+            { nome: "Cockpit Operações - Retail por grupos", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1646909923&single=true" },
+            { nome: "Cockpit Operações - Fulfillment por grupos", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1022639883&single=true" },
+            { nome: "Cockpit Operações - Retail + MR - MR puro por grupos", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=616418256&single=true" },
+            { nome: "Dashboard Milk", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=116624029&single=true" },
+            { nome: "Dashboard FF", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1540745323&single=true" },
+            { nome:"BACKLOG", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTFktZyFmfALarBt5jAszR94F1EwAdxzpq10dkIc9diHH0uElrY7sRxGFv9Jke8IPcml2sfMeYaHLKz/pubhtml?gid=577403338&single=true" },
+            { nome:"Monitoramento DL", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTuW2k1M-gzxULcbPsPhy-I3YYY56TZsx5UYHwNUBrqNBoPWbW71j5WeZncrxe1GR-1bNlfjKJWlKrC/pubhtml?gid=238164626&single=true" },
+            {nome:"abc",url:"https://app.powerbi.com/view?r=eyJrIjoiMDkxMDAwMDYtYjc5My00OTA0LWIyNWUtNGJlZTUxNDdmNjgxIiwidCI6IjEwZmZhYTFiLTA0ZDEtNDBiMC05OTIzLTJmN2ViZmUxMmM1NCJ9"}
+        ];
+
+        let indiceAtual = 0;
+        let autoSwitch = false;
+        let intervalo = 60;
+        let intervalId = null;
+        let tempoRestante = intervalo;
+        let timerVisualId = null;
+
+        const select = document.getElementById("planilha-select");
+        const iframe = document.getElementById("iframe-container");
+        const spinner = document.getElementById("spinner");
+        const trocarBtn = document.getElementById("trocar-btn");
+        const autoSwitchInput = document.getElementById("auto-switch");
+        const intervaloInput = document.getElementById("intervalo");
+        const intervaloMsg = document.getElementById("intervalo-msg");
+        const fullscreenBtn = document.getElementById("fullscreen-btn");
+        const timerSpan = document.getElementById("timer-visual");
+        const audio = document.getElementById('notificacao-audio');
+        const notif = document.getElementById('notificacao-visual');
+
+        arquivos.forEach((item, idx) => {
+            const opt = document.createElement("option");
+            opt.value = idx;
+            opt.textContent = item.nome;
+            select.appendChild(opt);
+        });
+
+        function carregarEstado() {
+            const salvoIndice = localStorage.getItem('indiceAtual');
+            const salvoAuto = localStorage.getItem('autoSwitch');
+            const salvoIntervalo = localStorage.getItem('intervalo');
+            if (salvoIndice !== null && !isNaN(Number(salvoIndice))) {
+                indiceAtual = Number(salvoIndice);
+            }
+            if (salvoAuto !== null) {
+                autoSwitch = salvoAuto === "true";
+                autoSwitchInput.checked = autoSwitch;
+            }
+            if (salvoIntervalo !== null && !isNaN(Number(salvoIntervalo))) {
+                intervalo = Number(salvoIntervalo);
+                intervaloInput.value = intervalo;
+            }
+        }
+
+        function salvarEstado() {
+            localStorage.setItem('indiceAtual', indiceAtual);
+            localStorage.setItem('autoSwitch', autoSwitch);
+            localStorage.setItem('intervalo', intervalo);
+        }
+
+        function animarIframe() {
+            iframe.classList.add('anim');
+            setTimeout(() => iframe.classList.remove('anim'), 600);
+        }
+
+        function mostrarPlanilha(indice) {
+            spinner.style.display = "block";
+            iframe.src = arquivos[indice].url;
+            indiceAtual = indice;
+            select.value = indice;
+            animarIframe();
+            salvarEstado();
+        }
+
+        function notificarTroca() {
+            audio.currentTime = 0;
+            audio.play();
+            notif.style.display = 'block';
+            notif.style.opacity = 1;
+            setTimeout(() => {
+                notif.style.opacity = 0;
+                setTimeout(() => {
+                    notif.style.display = 'none';
+                }, 600);
+            }, 900);
+        }
+
+        function proximaPlanilha(auto = false) {
+            let novoIndice = (indiceAtual + 1) % arquivos.length;
+            if (novoIndice === 0 && indiceAtual === arquivos.length - 1) {
+                trocarBtn.classList.add('flash');
+                setTimeout(() => trocarBtn.classList.remove('flash'), 300);
+            }
+            mostrarPlanilha(novoIndice);
+            if (auto) notificarTroca();
+            if (auto) {
+                tempoRestante = intervalo;
+            }
+        }
+
+        select.addEventListener("change", function() {
+            mostrarPlanilha(Number(this.value));
+            tempoRestante = intervalo;
+            atualizarTimerVisual();
+        });
+
+        trocarBtn.addEventListener("click", function() {
+            proximaPlanilha(false);
+            tempoRestante = intervalo;
+            atualizarTimerVisual();
+        });
+
+        autoSwitchInput.addEventListener("change", function() {
+            autoSwitch = this.checked;
+            gerenciarTrocaAutomatica();
+            const syncIcon = this.parentElement.querySelector('.fa-sync-alt');
+            if (this.checked) {
+                syncIcon.style.animation = "spin 1s linear infinite";
+                syncIcon.style.color = "#21aaff";
+            } else {
+                syncIcon.style.animation = "none";
+                syncIcon.style.color = "";
+            }
+            salvarEstado();
+        });
+
+        intervaloInput.addEventListener("input", function() {
+            let val = Number(this.value);
+            if (isNaN(val) || val < 5 || val > 600) {
+                this.classList.add('invalid');
+                intervaloMsg.style.display = "inline";
+            } else {
+                this.classList.remove('invalid');
+                intervaloMsg.style.display = "none";
+                intervalo = val;
+                tempoRestante = intervalo;
+                salvarEstado();
+                gerenciarTrocaAutomatica();
+                atualizarTimerVisual();
+            }
+        });
+
+        function atualizarTimerVisual() {
+            if (autoSwitch && !intervaloInput.classList.contains('invalid')) {
+                timerSpan.textContent = `Próx: ${tempoRestante}s`;
+            } else {
+                timerSpan.textContent = '';
+            }
+        }
+
+        function iniciarTimerVisual() {
+            if (timerVisualId) clearInterval(timerVisualId);
+            tempoRestante = intervalo;
+            atualizarTimerVisual();
+            timerVisualId = setInterval(() => {
+                if (!autoSwitch || intervaloInput.classList.contains('invalid')) {
+                    clearInterval(timerVisualId);
+                    timerVisualId = null;
+                    atualizarTimerVisual();
+                    return;
+                }
+                tempoRestante--;
+                if (tempoRestante <= 0) tempoRestante = intervalo;
+                atualizarTimerVisual();
+            }, 1000);
+        }
+
+        function gerenciarTrocaAutomatica() {
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+            if (timerVisualId) {
+                clearInterval(timerVisualId);
+                timerVisualId = null;
+            }
+            if (autoSwitch && !intervaloInput.classList.contains('invalid')) {
+                intervalId = setInterval(() => proximaPlanilha(true), intervalo * 1000);
+                iniciarTimerVisual();
+            } else {
+                timerSpan.textContent = '';
+            }
+        }
+
+        iframe.addEventListener("load", () => spinner.style.display = "none");
+
+        fullscreenBtn.addEventListener("click", function() {
+            if (iframe.requestFullscreen) {
+                iframe.requestFullscreen();
+            } else if (iframe.webkitRequestFullscreen) {
+                iframe.webkitRequestFullscreen();
+            } else if (iframe.msRequestFullscreen) {
+                iframe.msRequestFullscreen();
+            }
+        });
+
+        function verificarFullscreenBtn() {
+            if (window.innerWidth < 900) {
+                fullscreenBtn.style.display = "flex";
+            } else {
+                fullscreenBtn.style.display = "none";
+            }
+        }
+        window.addEventListener("resize", verificarFullscreenBtn);
+
+        carregarEstado();
+        mostrarPlanilha(indiceAtual);
+        gerenciarTrocaAutomatica();
+        verificarFullscreenBtn();
+    </script>
+</body>
+</html>
