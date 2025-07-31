@@ -4,16 +4,118 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoramento PCP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: #111;
             margin: 0;
             padding: 0;
+            overflow-x: hidden; /* Evita rolagem horizontal */
+        }
+
+        /* Splash Screen */
+        #splash {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(120deg, #181818 60%, #21a6ff 100%);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: opacity 0.7s;
+        }
+        #splash img {
+            width: 200px;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+        }
+        #splash div {
+            color: #fff;
+            font-size: 1.3em;
+            margin-top: 18px;
+            letter-spacing: 1px;
+        }
+
+        /* Card Selection View */
+        #card-selection-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            min-height: 100vh;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #1a202c; /* Fundo para a view de cards */
+            color: #e2e8f0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #21aaff;
+            margin-bottom: 0.5rem;
+        }
+        .header p {
+            font-size: 1.1rem;
+            color: #cbd5e0;
+        }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            max-width: 1200px;
+            width: 100%;
+        }
+        .card {
+            background-color: #2d3748;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid #4a5568;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            border-color: #21aaff;
+        }
+        .card-icon {
+            font-size: 3rem;
+            color: #21aaff;
+            margin-bottom: 1rem;
+        }
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+        .card-description {
+            font-size: 0.9rem;
+            color: #a0aec0;
+        }
+
+        /* Monitoring View */
+        #monitoring-view {
+            display: none; /* Oculto por padrão */
+            width: 100vw;
+            height: 100vh;
+            flex-direction: column;
         }
         .top-bar {
-            width: 100vw;
+            width: 100%;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -108,7 +210,7 @@
             0% { transform: rotate(0); }
             100% { transform: rotate(360deg); }
         }
-        #trocar-btn {
+        #trocar-btn, #back-to-cards-btn {
             padding: 5px 14px;
             font-size: 0.95em;
             background: linear-gradient(90deg, #21aaff, #0070c1 100%);
@@ -124,7 +226,7 @@
             align-items: center;
             gap: 4px;
         }
-        #trocar-btn:hover, #fullscreen-btn:hover {
+        #trocar-btn:hover, #fullscreen-btn:hover, #back-to-cards-btn:hover {
             background: linear-gradient(90deg, #0070c1, #21aaff 100%);
             box-shadow: 0 3px 10px rgba(33,170,255,0.18);
             transform: scale(1.04);
@@ -137,8 +239,8 @@
             100% { background: linear-gradient(90deg, #21aaff, #0070c1 100%);}
         }
         #iframe-container {
-            width: 100vw;
-            height: 95vh;
+            width: 100%;
+            height: calc(100vh - 60px); /* Ajusta a altura com base na barra superior */
             border: none;
             box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.6);
             background: #000;
@@ -218,22 +320,61 @@
             opacity: 1;
             transition: opacity 0.6s;
         }
-        /* Splash */
-        #splash {
-            position:fixed;
-            top:0;left:0;right:0;bottom:0;
-            background:linear-gradient(120deg,#181818 60%,#21a6ff 100%);
-            z-index:9999;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            flex-direction:column;
-            transition: opacity 0.7s;
+        /* Insights Modal (removido, mas mantendo o estilo caso seja adicionado novamente) */
+        #insights-modal {
+            display: none; /* Oculto por padrão */
+            position: fixed; /* Permanece no lugar */
+            z-index: 100; /* Fica no topo */
+            left: 0;
+            top: 0;
+            width: 100%; /* Largura total */
+            height: 100%; /* Altura total */
+            overflow: auto; /* Habilita rolagem se necessário */
+            background-color: rgba(0,0,0,0.6); /* Fundo preto com opacidade */
+            justify-content: center;
+            align-items: center;
         }
-        @keyframes splashSpin {
-            0% { transform: rotate(0);}
-            100% { transform: rotate(360deg);}
+
+        .modal-content {
+            background-color: #222;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #444;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            color: #c4c4c4;
+            position: relative;
         }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal-content h2 {
+            color: #21aaff;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        .modal-content p {
+            white-space: pre-wrap; /* Preserva espaços em branco e quebras de linha */
+        }
+
         @media (max-width: 900px) {
             .top-bar {
                 flex-direction: column;
@@ -247,7 +388,7 @@
                 justify-content: center;
             }
             #iframe-container {
-                height: 80vh;
+                height: calc(100vh - 120px); /* Ajustado para barra superior menor no celular */
             }
             #fullscreen-btn {
                 display: flex;
@@ -258,69 +399,77 @@
 <body>
     <!-- Splash de abertura -->
     <div id="splash">
-        <img src="dafiti.gif" alt="Logo" style="width:200px; height:auto; border-radius:12px; box-shadow:0 2px 12px #0008;">
+        <img src="dafiti.gif" alt="Logo" style="width:200px; height:auto; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.5);">
         <div style="color:#fff;font-size:1.3em;margin-top:18px;letter-spacing:1px;">Monitoramento PCP</div>
     </div>
 
-    <div class="top-bar">
-        <h1>
-            <img src="dafiti.gif" alt="Logo" style="height:28px; vertical-align:middle; margin-right:8px; border-radius:6px;">
-            <i class="fas fa-chart-line"></i> Monitoramento PCP
-        </h1>
-        <span id="data-hora"></span>
-        <div class="controls">
-            <label for="planilha-select" aria-label="Escolha a planilha"><i class="fas fa-table"></i></label>
-            <select id="planilha-select" aria-label="Lista de planilhas"></select>
-            <label class="auto-switch-label" aria-label="Troca automática">
-                <input type="checkbox" id="auto-switch" aria-label="Ativar troca automática">
-                <i class="fas fa-sync-alt"></i>
-            </label>
-            <label for="intervalo" aria-label="Intervalo em segundos"><i class="fas fa-clock"></i></label>
-            <input type="number" id="intervalo" value="60" min="5" max="600" step="1" style="width: 40px" aria-label="Intervalo de troca automática">
-            <span id="intervalo-msg">5-600</span>
-            <span id="timer-visual"></span>
-            <button id="trocar-btn" aria-label="Próxima planilha"><i class="fas fa-forward"></i></button>
+    <!-- Página de Seleção de Cards -->
+    <div id="card-selection-view">
+        <div class="header">
+            <h1>Bem-vindo ao Monitoramento PCP</h1>
+            <p>Selecione uma planilha ou dashboard para iniciar o monitoramento.</p>
+        </div>
+        <div class="cards-grid" id="spreadsheet-cards-container">
+            <!-- Os cards das planilhas serão inseridos aqui pelo JavaScript -->
         </div>
     </div>
-    <iframe id="iframe-container" src="" frameborder="0" title="Planilha selecionada"></iframe>
-    <div id="spinner"><i class="fas fa-spinner fa-spin" style="color:#21aaff"></i></div>
-    <button id="fullscreen-btn" aria-label="Abrir em tela cheia"><i class="fas fa-expand"></i></button>
-    <audio id="notificacao-audio" src="https://cdn.pixabay.com/audio/2022/03/15/audio_115b9b7b1b.mp3" preload="auto"></audio>
-    <div id="notificacao-visual">Planilha trocada!</div>
+
+    <!-- Página de Monitoramento (inicialmente oculta) -->
+    <div id="monitoring-view">
+        <div class="top-bar">
+            <h1>
+                <img src="dafiti.gif" alt="Logo" style="height:28px; vertical-align:middle; margin-right:8px; border-radius:6px;">
+                <i class="fas fa-chart-line"></i> Monitoramento PCP
+            </h1>
+            <span id="data-hora"></span>
+            <div class="controls">
+                <button id="back-to-cards-btn" aria-label="Voltar para seleção de planilhas"><i class="fas fa-arrow-left"></i> Voltar</button>
+                <label for="planilha-select" aria-label="Escolha a planilha"><i class="fas fa-table"></i></label>
+                <select id="planilha-select" aria-label="Lista de planilhas"></select>
+                <label class="auto-switch-label" aria-label="Troca automática">
+                    <input type="checkbox" id="auto-switch" aria-label="Ativar troca automática">
+                    <i class="fas fa-sync-alt"></i>
+                </label>
+                <label for="intervalo" aria-label="Intervalo em segundos"><i class="fas fa-clock"></i></label>
+                <input type="number" id="intervalo" value="60" min="5" max="600" step="1" style="width: 40px" aria-label="Intervalo de troca automática">
+                <span id="intervalo-msg">5-600</span>
+                <span id="timer-visual"></span>
+                <button id="trocar-btn" aria-label="Próxima planilha"><i class="fas fa-forward"></i></button>
+                <!-- O botão "Gerar Insights" foi removido daqui -->
+            </div>
+        </div>
+        <iframe id="iframe-container" src="" frameborder="0" title="Planilha selecionada"></iframe>
+        <div id="spinner"><i class="fas fa-spinner fa-spin" style="color:#21aaff"></i></div>
+        <!-- O spinner de insights foi removido daqui -->
+
+        <button id="fullscreen-btn" aria-label="Abrir em tela cheia"><i class="fas fa-expand"></i></button>
+        <audio id="notificacao-audio" src="https://cdn.pixabay.com/audio/2022/03/15/audio_115b9b7b1b.mp3" preload="auto"></audio>
+        <div id="notificacao-visual">Planilha trocada!</div>
+
+        <!-- O Modal para exibir insights foi removido daqui -->
+        <div id="insights-modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h2>Insights da Planilha</h2>
+                <p id="insights-text">Conteúdo de insights.</p>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // Splash de abertura
-        window.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                const splash = document.getElementById('splash');
-                splash.style.opacity = 0;
-                setTimeout(() => splash.style.display = 'none', 700);
-            }, 1200);
-        });
-
-        // Data e hora atual
-        function atualizarDataHora() {
-            const dataHoraSpan = document.getElementById('data-hora');
-            const agora = new Date();
-            const data = agora.toLocaleDateString('pt-BR');
-            const hora = agora.toLocaleTimeString('pt-BR');
-            dataHoraSpan.textContent = `${data} ${hora}`;
-        }
-        setInterval(atualizarDataHora, 1000);
-        atualizarDataHora();
-
+        // Lista de URLs das planilhas com descrições
         const arquivos = [
-            { nome: "Base p. Data", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3JC5-FEU2jjyEiXATzDqDnPPTUQ1CdJ2Au-VpDIYmn50YVpf41SUUT-Apf1ULsASbLSq56RG6zyh3/pubhtml?gid=1438916736&single=true" },
-            { nome: "Base Oficial", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3JC5-FEU2jjyEiXATzDqDnPPTUQ1CdJ2Au-VpDIYmn50YVpf41SUUT-Apf1ULsASbLSq56RG6zyh3/pubhtml?gid=1510322153&single=true" },
-            { nome: "Dashboard Geral - Processos", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1594703048&single=true" },
-            { nome: "Cockpit Operações - Retail por grupos", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1646909923&single=true" },
-            { nome: "Cockpit Operações - Fulfillment por grupos", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1022639883&single=true" },
-            { nome: "Cockpit Operações - Retail + MR - MR puro por grupos", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=616418256&single=true" },
-            { nome: "Dashboard Milk", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=116624029&single=true" },
-            { nome: "Dashboard FF", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1540745323&single=true" },
-            { nome:"BACKLOG", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTFktZyFmfALarBt5jAszR94F1EwAdxzpq10dkIc9diHH0uElrY7sRxGFv9Jke8IPcml2sfMeYaHLKz/pubhtml?gid=577403338&single=true" },
-            { nome:"Monitoramento DL", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTuW2k1M-gzxULcbPsPhy-I3YYY56TZsx5UYHwNUBrqNBoPWbW71j5WeZncrxe1GR-1bNlfjKJWlKrC/pubhtml?gid=238164626&single=true" },
-            {nome:"Estoque",url:"https://app.powerbi.com/view?r=eyJrIjoiMDkxMDAwMDYtYjc5My00OTA0LWIyNWUtNGJlZTUxNDdmNjgxIiwidCI6IjEwZmZhYTFiLTA0ZDEtNDBiMC05OTIzLTJmN2ViZmUxMmM1NCJ9"}
+            { nome: "Captação - Base p. Data", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3JC5-FEU2jjyEiXATzDqDnPPTUQ1CdJ2Au-VpDIYmn50YVpf41SUUT-Apf1ULsASbLSq56RG6zyh3/pubhtml?gid=1438916736&single=true", description: "" },
+            { nome: "Captação - Base Oficial", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3JC5-FEU2jjyEiXATzDqDnPPTUQ1CdJ2Au-VpDIYmn50YVpf41SUUT-Apf1ULsASbLSq56RG6zyh3/pubhtml?gid=1510322153&single=true", description: "" },
+            { nome: "Cockpit Operações - Processos", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1594703048&single=true", description: "" },
+            { nome: "Cockpit Operações - Retail por grupos", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1646909923&single=true", description: "" },
+            { nome: "Cockpit Operações - Fulfillment por grupos", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1022639883&single=true", description: "" },
+            { nome: "Cockpit Operações - Retail + MR - MR puro por grupos", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=616418256&single=true", description: "" },
+            { nome: "Cockpit Operações - Milk Run", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=116624029&single=true", description: "" },
+            { nome: "Cockpit Operações - Fulffilment", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1540745323&single=true", description: "" },
+            { nome:"Backlog - Inbound", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTFktZyFmfALarBt5jAszR94F1EwAdxzpq10dkIc9diHH0uElrY7sRxGFv9Jke8IPcml2sfMeYaHLKz/pubhtml?gid=577403338&single=true", description: "" },
+            { nome:"Monitoramento DL", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTuW2k1M-gzxULcbPsPhy-I3YYY56TZsx5UYHwNUBrqNBoPWbW71j5WeZncrxe1GR-1bNlfjKJWlKrC/pubhtml?gid=238164626&single=true", description: "" },
+            {nome:"Estoque",url:"https://app.powerbi.com/view?r=eyJrIjoiMDkxMDAwMDYtYjc5My00OTA0LWIyNWUtNGJlZTUxNDdmNjgxIiwidCI6IjEwZmZhYTFiLTA0ZDEtNDBiMC05OTIzLTJmN2ViZmUxMmM1NCJ9", description: ""}
         ];
 
         let indiceAtual = 0;
@@ -330,6 +479,12 @@
         let tempoRestante = intervalo;
         let timerVisualId = null;
 
+        // Elementos da página de cards
+        const cardSelectionView = document.getElementById('card-selection-view');
+        const spreadsheetCardsContainer = document.getElementById('spreadsheet-cards-container');
+
+        // Elementos da página de monitoramento
+        const monitoringView = document.getElementById('monitoring-view');
         const select = document.getElementById("planilha-select");
         const iframe = document.getElementById("iframe-container");
         const spinner = document.getElementById("spinner");
@@ -341,21 +496,98 @@
         const timerSpan = document.getElementById("timer-visual");
         const audio = document.getElementById('notificacao-audio');
         const notif = document.getElementById('notificacao-visual');
+        const dataHoraSpan = document.getElementById('data-hora');
+        const backToCardsBtn = document.getElementById('back-to-cards-btn');
 
-        arquivos.forEach((item, idx) => {
-            const opt = document.createElement("option");
-            opt.value = idx;
-            opt.textContent = item.nome;
-            select.appendChild(opt);
-        });
 
+        // Elementos do modal de insights (mantidos para evitar erros de referência, mas com display: none)
+        const insightsBtn = document.getElementById('insights-btn'); // Este botão foi removido do HTML
+        const insightsModal = document.getElementById('insights-modal');
+        const closeButton = document.querySelector('.close-button');
+        const insightsText = document.getElementById('insights-text');
+        // insightsSpinner foi removido do HTML, mas a variável pode ser mantida para evitar erros ou removida se não for mais usada.
+        // const insightsSpinner = document.getElementById('insights-spinner'); 
+
+        // --- Funções de UI ---
+
+        // Função para alternar entre as views
+        function showView(viewId) {
+            cardSelectionView.style.display = 'none';
+            monitoringView.style.display = 'none';
+
+            if (viewId === 'cards') {
+                cardSelectionView.style.display = 'flex';
+                // Para garantir que o iframe não continue carregando em segundo plano
+                iframe.src = 'about:blank';
+                gerenciarTrocaAutomatica(); // Para a troca automática se estiver ativa
+            } else if (viewId === 'monitor') {
+                monitoringView.style.display = 'flex';
+                // Reinicia a data/hora e o timer visual quando entra na view de monitoramento
+                atualizarDataHora();
+                gerenciarTrocaAutomatica();
+            }
+        }
+
+        // Função para criar um card de planilha
+        function createSpreadsheetCard(item, index) {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
+            cardDiv.dataset.index = index; // Armazena o índice para fácil acesso
+
+            const cardIcon = document.createElement('i');
+            cardIcon.className = 'fas fa-chart-bar card-icon'; // Ícone genérico para planilhas
+
+            const cardTitle = document.createElement('h2');
+            cardTitle.className = 'card-title';
+            cardTitle.textContent = item.nome;
+
+            const cardDescription = document.createElement('p');
+            cardDescription.className = 'card-description';
+            cardDescription.textContent = item.description;
+
+            cardDiv.appendChild(cardIcon);
+            cardDiv.appendChild(cardTitle);
+            cardDiv.appendChild(cardDescription);
+
+            // Adiciona event listener para o clique no card
+            cardDiv.addEventListener('click', () => {
+                displayMonitor(index);
+            });
+
+            spreadsheetCardsContainer.appendChild(cardDiv);
+        }
+
+        // Exibe a view de monitoramento com a planilha selecionada
+        function displayMonitor(index) {
+            showView('monitor');
+            mostrarPlanilha(index);
+            // Atualiza o localStorage com o último índice selecionado
+            localStorage.setItem('indiceAtual', index);
+        }
+
+        // --- Funções de Monitoramento PCP (existentes, com pequenas adaptações) ---
+
+        // Data e hora atual
+        function atualizarDataHora() {
+            const agora = new Date();
+            const data = agora.toLocaleDateString('pt-BR');
+            const hora = agora.toLocaleTimeString('pt-BR');
+            dataHoraSpan.textContent = `${data} ${hora}`;
+        }
+        setInterval(atualizarDataHora, 1000); // Atualiza a cada segundo
+
+        // Carrega o estado salvo no localStorage
         function carregarEstado() {
             const salvoIndice = localStorage.getItem('indiceAtual');
             const salvoAuto = localStorage.getItem('autoSwitch');
             const salvoIntervalo = localStorage.getItem('intervalo');
-            if (salvoIndice !== null && !isNaN(Number(salvoIndice))) {
+            
+            if (salvoIndice !== null && !isNaN(Number(salvoIndice)) && Number(salvoIndice) >= 0 && Number(salvoIndice) < arquivos.length) {
                 indiceAtual = Number(salvoIndice);
+            } else {
+                indiceAtual = 0; // Padrão para a primeira planilha se não houver estado salvo ou for inválido
             }
+
             if (salvoAuto !== null) {
                 autoSwitch = salvoAuto === "true";
                 autoSwitchInput.checked = autoSwitch;
@@ -366,17 +598,20 @@
             }
         }
 
+        // Salva o estado atual no localStorage
         function salvarEstado() {
             localStorage.setItem('indiceAtual', indiceAtual);
             localStorage.setItem('autoSwitch', autoSwitch);
             localStorage.setItem('intervalo', intervalo);
         }
 
+        // Adiciona uma animação ao iframe quando a planilha é trocada
         function animarIframe() {
             iframe.classList.add('anim');
             setTimeout(() => iframe.classList.remove('anim'), 600);
         }
 
+        // Mostra a planilha no iframe
         function mostrarPlanilha(indice) {
             spinner.style.display = "block";
             iframe.src = arquivos[indice].url;
@@ -386,6 +621,7 @@
             salvarEstado();
         }
 
+        // Toca um som e mostra uma notificação visual quando a planilha é trocada automaticamente
         function notificarTroca() {
             audio.currentTime = 0;
             audio.play();
@@ -399,6 +635,7 @@
             }, 900);
         }
 
+        // Troca para a próxima planilha na lista
         function proximaPlanilha(auto = false) {
             let novoIndice = (indiceAtual + 1) % arquivos.length;
             if (novoIndice === 0 && indiceAtual === arquivos.length - 1) {
@@ -412,6 +649,7 @@
             }
         }
 
+        // Event listeners para a view de monitoramento
         select.addEventListener("change", function() {
             mostrarPlanilha(Number(this.value));
             tempoRestante = intervalo;
@@ -517,11 +755,48 @@
         }
         window.addEventListener("resize", verificarFullscreenBtn);
 
-        carregarEstado();
-        mostrarPlanilha(indiceAtual);
-        gerenciarTrocaAutomatica();
-        verificarFullscreenBtn();
+        // --- Funções para a integração com a API Gemini (removidas) ---
+        // A função generateInsights e seus event listeners foram removidos.
+
+        // --- Inicialização Geral ---
+        window.addEventListener('load', () => {
+            // Popula os cards na página de seleção
+            arquivos.forEach((item, index) => {
+                createSpreadsheetCard(item, index);
+            });
+
+            // Carrega o estado inicial (última planilha visitada ou a primeira)
+            carregarEstado();
+
+            // Verifica se há um índice de planilha na URL (para compatibilidade, embora agora seja SPA)
+            const urlParams = new URLSearchParams(window.location.search);
+            const sheetIndexFromUrl = urlParams.get('sheetIndex');
+
+            if (sheetIndexFromUrl !== null && !isNaN(Number(sheetIndexFromUrl)) && Number(sheetIndexFromUrl) >= 0 && Number(sheetIndexFromUrl) < arquivos.length) {
+                // Se houver um índice na URL, vai direto para a view de monitoramento
+                displayMonitor(Number(sheetIndexFromUrl));
+            } else {
+                // Caso contrário, mostra a página de seleção de cards
+                showView('cards');
+            }
+
+            // Esconde o splash screen depois que a view inicial estiver pronta
+            const splash = document.getElementById('splash');
+            splash.style.opacity = 0;
+            setTimeout(() => {
+                splash.style.display = 'none';
+            }, 700); // Dá tempo para a transição de fade out
+        });
+
+        // Event listener para o botão "Voltar" na view de monitoramento
+        backToCardsBtn.addEventListener('click', () => {
+            showView('cards');
+            // Opcional: Limpar o parâmetro sheetIndex da URL se você quiser que o link direto reinicie
+            const url = new URL(window.location.href);
+            url.searchParams.delete('sheetIndex');
+            window.history.pushState({}, '', url.toString()); // Usa toString() para garantir a atualização da URL
+        });
     </script>
 </body>
 </html>
-</html>
+
