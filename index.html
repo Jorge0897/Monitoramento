@@ -3,800 +3,421 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoramento PCP</title>
+    <title>Monitoramento PCP | DAFITI</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
+        /* TEMA ESCURO (PADRÃO) */
+        :root {
+            --bg-primary: #111827; --bg-secondary: #1F2937; --bg-tertiary: #374151;
+            --border-color: #4B5563; --text-primary: #F3F4F6; --text-secondary: #9CA3AF;
+            --accent-primary: #38BDF8; --accent-secondary: #0EA5E9;
+            --shadow-color: rgba(56, 189, 248, 0.1); --shadow-color-hover: rgba(56, 189, 248, 0.2);
+            --font-main: 'Inter', sans-serif;
+        }
+
+        /* TEMA CLARO */
+        body.light-theme {
+            --bg-primary: #F3F4F6; --bg-secondary: #FFFFFF; --bg-tertiary: #E5E7EB;
+            --border-color: #D1D5DB; --text-primary: #1F2937; --text-secondary: #4B5563;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #111;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden; /* Evita rolagem horizontal */
+            font-family: var(--font-main);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            margin: 0; padding: 0; overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
         }
-
-        /* Splash Screen */
-        #splash {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(120deg, #181818 60%, #21a6ff 100%);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            transition: opacity 0.7s;
-        }
-        #splash img {
-            width: 200px;
-            height: auto;
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.5);
-        }
-        #splash div {
-            color: #fff;
-            font-size: 1.3em;
-            margin-top: 18px;
-            letter-spacing: 1px;
-        }
-
-        /* Card Selection View */
-        #card-selection-view {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 2rem;
-            min-height: 100vh;
-            width: 100%;
-            box-sizing: border-box;
-            background-color: #1a202c; /* Fundo para a view de cards */
-            color: #e2e8f0;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #21aaff;
-            margin-bottom: 0.5rem;
-        }
-        .header p {
-            font-size: 1.1rem;
-            color: #cbd5e0;
-        }
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            max-width: 1200px;
-            width: 100%;
-        }
-        .card {
-            background-color: #2d3748;
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            cursor: pointer;
-            border: 1px solid #4a5568;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-            border-color: #21aaff;
-        }
-        .card-icon {
-            font-size: 3rem;
-            color: #21aaff;
-            margin-bottom: 1rem;
-        }
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #fff;
-            margin-bottom: 0.5rem;
-        }
-        .card-description {
-            font-size: 0.9rem;
-            color: #a0aec0;
-        }
-
-        /* Monitoring View */
-        #monitoring-view {
-            display: none; /* Oculto por padrão */
-            width: 100vw;
-            height: 100vh;
-            flex-direction: column;
-        }
-        .top-bar {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: linear-gradient(90deg, #181818, #23272f 100%);
-            padding: 8px 16px 4px 16px;
-            box-sizing: border-box;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.25);
-        }
-        .top-bar h1 {
-            color: #fff;
-            font-size: 1.2em;
-            margin: 0;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .top-bar h1 i {
-            color: #21aaff;
-            font-size: 1em;
-        }
-        #data-hora {
-            color: #21aaff;
-            font-size: 0.95em;
-            margin-left: 16px;
-            white-space: nowrap;
-        }
-        .controls {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        label {
-            color: #c4c4c4;
-            font-size: 0.95em;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        select, input[type="number"] {
-            background-color: #222;
-            color: #fff;
-            border: 1px solid #444;
-            border-radius: 6px;
-            padding: 4px 8px;
-            font-size: 0.95em;
-            outline: none;
-            transition: border 0.2s, box-shadow 0.2s;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.10);
-        }
-        select:focus, input[type="number"]:focus {
-            border: 1.5px solid #21aaff;
-            box-shadow: 0 0 3px #21aaff44;
-            animation: pulse 0.7s;
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(33,170,255,0.3); }
-            70% { box-shadow: 0 0 0 6px rgba(33,170,255,0); }
-            100% { box-shadow: 0 0 0 0 rgba(33,170,255,0); }
-        }
-        select {
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='18' viewBox='0 0 24 24' width='18' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
-            background-repeat: no-repeat;
-            background-position-x: 98%;
-            background-position-y: center;
-            padding-right: 24px;
-        }
-        option {
-            background-color: #222;
-            color: #fff;
-        }
-        #auto-switch {
-            accent-color: #21aaff;
-            width: 14px;
-            height: 14px;
-            vertical-align: middle;
-            margin-right: 2px;
-        }
-        .auto-switch-label i {
-            font-size: 0.95em;
-            transition: color 0.2s;
-        }
-        #auto-switch:checked + i {
-            animation: spin 1s linear infinite;
-            color: #21aaff;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0); }
-            100% { transform: rotate(360deg); }
-        }
-        #trocar-btn, #back-to-cards-btn {
-            padding: 5px 14px;
-            font-size: 0.95em;
-            background: linear-gradient(90deg, #21aaff, #0070c1 100%);
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            letter-spacing: 0.5px;
-            box-shadow: 0 1px 4px rgba(33,170,255,0.10);
-            transition: background 0.2s, box-shadow 0.15s, transform 0.10s;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        #trocar-btn:hover, #fullscreen-btn:hover, #back-to-cards-btn:hover {
-            background: linear-gradient(90deg, #0070c1, #21aaff 100%);
-            box-shadow: 0 3px 10px rgba(33,170,255,0.18);
-            transform: scale(1.04);
-        }
-        #trocar-btn.flash {
-            animation: flashBtn 0.3s;
-        }
-        @keyframes flashBtn {
-            0% { background: #ff3333; }
-            100% { background: linear-gradient(90deg, #21aaff, #0070c1 100%);}
-        }
-        #iframe-container {
-            width: 100%;
-            height: calc(100vh - 60px); /* Ajusta a altura com base na barra superior */
-            border: none;
-            box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.6);
-            background: #000;
-            margin-top: 0;
-            border-radius: 0 0 10px 10px;
-            transition: box-shadow 0.3s, filter 0.3s;
-        }
-        #iframe-container.anim {
-            box-shadow: 0px 0px 20px 5px #21aaff66;
-            filter: brightness(1.05) drop-shadow(0 0 4px #21aaff55);
-        }
-        #spinner {
-            display:none;
-            position:fixed;
-            top:50%;
-            left:50%;
-            transform:translate(-50%,-50%);
-            z-index:10;
-            background:rgba(0,0,0,0.2);
-            border-radius: 50%;
-            padding: 10px;
-        }
-        #spinner i {
-            font-size: 1.5em;
-        }
-        #fullscreen-btn {
-            display: none;
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            z-index: 20;
-            background: linear-gradient(90deg, #21aaff, #0070c1 100%);
-            color: #fff;
-            border: none;
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            font-size: 1.2em;
-            box-shadow: 0 1px 4px rgba(33,170,255,0.15);
-            cursor: pointer;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s, box-shadow 0.1s, transform 0.08s;
-        }
-        #fullscreen-btn:active {
-            transform: scale(0.95);
-        }
-        #intervalo.invalid {
-            border: 2px solid #ff3333;
-            background: #330000;
-            color: #fff;
-        }
-        #intervalo-msg {
-            color: #ff3333;
-            font-size: 0.85em;
-            margin-left: 4px;
-            display: none;
-        }
-        #timer-visual {
-            margin-left: 8px;
-            color: #21aaff;
-            font-weight: bold;
-            font-size: 0.95em;
-        }
-        #notificacao-visual {
-            display:none;
-            position:fixed;
-            top:18px;
-            right:18px;
-            z-index:1000;
-            background:#21aaff;
-            color:#fff;
-            padding:8px 16px;
-            border-radius:8px;
-            box-shadow:0 1px 6px #21aaff99;
-            font-size:1em;
-            opacity: 1;
-            transition: opacity 0.6s;
-        }
-        /* Insights Modal (removido, mas mantendo o estilo caso seja adicionado novamente) */
-        #insights-modal {
-            display: none; /* Oculto por padrão */
-            position: fixed; /* Permanece no lugar */
-            z-index: 100; /* Fica no topo */
-            left: 0;
-            top: 0;
-            width: 100%; /* Largura total */
-            height: 100%; /* Altura total */
-            overflow: auto; /* Habilita rolagem se necessário */
-            background-color: rgba(0,0,0,0.6); /* Fundo preto com opacidade */
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background-color: #222;
-            margin: auto;
-            padding: 20px;
-            border: 1px solid #444;
-            border-radius: 10px;
-            width: 80%;
-            max-width: 600px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            color: #c4c4c4;
-            position: relative;
-        }
-
-        .close-button {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            position: absolute;
-            top: 10px;
-            right: 15px;
-        }
-
-        .close-button:hover,
-        .close-button:focus {
-            color: #fff;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .modal-content h2 {
-            color: #21aaff;
-            margin-top: 0;
-            margin-bottom: 15px;
-            font-size: 1.5em;
-        }
-        .modal-content p {
-            white-space: pre-wrap; /* Preserva espaços em branco e quebras de linha */
-        }
-
-        @media (max-width: 900px) {
-            .top-bar {
-                flex-direction: column;
-                gap: 10px;
-                padding: 10px 4px 4px 4px;
-            }
-            .controls {
-                flex-wrap: wrap;
-                gap: 5px;
-                width: 100%;
-                justify-content: center;
-            }
-            #iframe-container {
-                height: calc(100vh - 120px); /* Ajustado para barra superior menor no celular */
-            }
-            #fullscreen-btn {
-                display: flex;
-            }
-        }
+        
+        /* ... Estilos anteriores ... */
+        #splash { position: fixed; inset: 0; background: var(--bg-primary); z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; transition: opacity 0.8s ease-out, visibility 0.8s; }
+        #splash.hidden { opacity: 0; visibility: hidden; }
+        #splash img { width: 180px; border-radius: 1rem; box-shadow: 0 0 30px rgba(0,0,0,0.5); animation: fadeInLogo 1.5s ease-out forwards; }
+        #splash div { font-size: 1.5em; margin-top: 1.5rem; letter-spacing: 2px; font-weight: 500; animation: fadeInText 1.5s 0.2s ease-out forwards; }
+        @keyframes fadeInLogo { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeInText { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #card-selection-view { display: flex; flex-direction: column; align-items: center; padding: 2rem; min-height: 100vh; width: 100%; box-sizing: border-box; position: relative; overflow-y: auto; }
+        .header { text-align: center; margin-bottom: 1rem; width: 100%; max-width: 1400px; }
+        .header h1 { font-size: 2.8rem; font-weight: 700; background: linear-gradient(45deg, var(--accent-primary), var(--text-primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; }
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; max-width: 1400px; width: 100%; }
+        .card { background-color: var(--bg-secondary); border-radius: 1rem; padding: 2rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease, box-shadow 0.3s ease; text-align: center; cursor: pointer; border: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; }
+        .card:hover { transform: translateY(-8px); box-shadow: 0 10px 25px var(--shadow-color-hover); border-color: var(--accent-primary); }
+        .card-icon { font-size: 3rem; color: var(--accent-primary); margin-bottom: 1rem; }
+        .card-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
+        #monitoring-view { display: none; width: 100vw; height: 100vh; flex-direction: column; }
+        .top-bar { width: 100%; display: flex; align-items: center; justify-content: space-between; background-color: var(--bg-secondary); padding: 0.75rem 1.5rem; box-sizing: border-box; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 1rem; transition: transform 0.4s ease-in-out; }
+        body.presentation-mode .top-bar { transform: translateY(-120%); }
+        .top-bar-left, .controls { display: flex; align-items: center; gap: 1rem; }
+        #data-hora { font-size: 0.9em; white-space: nowrap; }
+        select, input[type="search"], input[type="text"], input[type="number"] { background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 12px; font-size: 0.95em; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+        .btn { padding: 8px 16px; font-size: 0.95em; background: linear-gradient(90deg, var(--accent-secondary), var(--accent-primary)); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: all 0.2s ease; display: flex; align-items: center; gap: 0.5rem; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px var(--shadow-color-hover); }
+        .btn.btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); }
+        .btn.btn-icon { padding: 8px; }
+        .btn.btn-danger { background: #EF4444; }
+        #iframe-container { flex-grow: 1; border: none; background: #000; }
+        
+        /* ESTILOS PARA NOVAS FUNCIONALIDADES */
+        #search-input { padding: 10px 15px; width: 100%; max-width: 500px; margin: 1rem auto 2rem; }
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { padding: 12px 20px; border-radius: 8px; color: #fff; font-weight: 500; box-shadow: 0 4px 15px rgba(0,0,0,0.2); opacity: 0; animation: slideInFadeOut 4s ease-in-out forwards; }
+        .toast.success { background-color: #22C55E; } .toast.warning { background-color: #F97316; } .toast.info { background-color: #3B82F6; }
+        @keyframes slideInFadeOut { 0%, 100% { opacity: 0; transform: translateY(100%); } 10%, 90% { opacity: 1; transform: translateY(0); } }
+        .modal-overlay { position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s; }
+        .modal-overlay.visible { opacity: 1; visibility: visible; }
+        .modal-content { background-color: var(--bg-secondary); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border-color); width: 90%; max-width: 700px; }
+        .modal-content h2 { font-size: 1.5rem; font-weight: 600; color: var(--accent-primary); margin-top: 0; margin-bottom: 1.5rem; }
+        #rotation-checklist { display: flex; flex-direction: column; gap: 0.5rem; max-height: 45vh; overflow-y: auto; padding-right: 5px; border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem; }
+        .checklist-item { display: flex; align-items: center; gap: 0.75rem; background-color: var(--bg-primary); padding: 0.75rem; border-radius: 8px; cursor: grab; user-select: none; }
+        .checklist-item:active { cursor: grabbing; }
+        .modal-actions, .group-actions { margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+        .sortable-ghost { opacity: 0.4; background: var(--bg-tertiary); }
     </style>
 </head>
-<body>
-    <!-- Splash de abertura -->
-    <div id="splash">
-        <img src="dafiti.gif" alt="Logo" style="width:200px; height:auto; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.5);">
-        <div style="color:#fff;font-size:1.3em;margin-top:18px;letter-spacing:1px;">Monitoramento PCP</div>
-    </div>
+<body class="dark-theme">
+    <div id="splash"><img src="dafiti.gif" alt="Logo"><div>MONITORAMENTO PCP</div></div>
 
-    <!-- Página de Seleção de Cards -->
-    <div id="card-selection-view">
-        <div class="header">
-            <h1>Bem-vindo ao Monitoramento PCP</h1>
-            <p>Selecione uma planilha ou dashboard para iniciar o monitoramento.</p>
-        </div>
-        <div class="cards-grid" id="spreadsheet-cards-container">
-            <!-- Os cards das planilhas serão inseridos aqui pelo JavaScript -->
-        </div>
-    </div>
-
-    <!-- Página de Monitoramento (inicialmente oculta) -->
-    <div id="monitoring-view">
-        <div class="top-bar">
-            <h1>
-                <img src="dafiti.gif" alt="Logo" style="height:28px; vertical-align:middle; margin-right:8px; border-radius:6px;">
-                <i class="fas fa-chart-line"></i> Monitoramento PCP
-            </h1>
-            <span id="data-hora"></span>
-            <div class="controls">
-                <button id="back-to-cards-btn" aria-label="Voltar para seleção de planilhas"><i class="fas fa-arrow-left"></i> Voltar</button>
-                <label for="planilha-select" aria-label="Escolha a planilha"><i class="fas fa-table"></i></label>
-                <select id="planilha-select" aria-label="Lista de planilhas"></select>
-                <label class="auto-switch-label" aria-label="Troca automática">
-                    <input type="checkbox" id="auto-switch" aria-label="Ativar troca automática">
-                    <i class="fas fa-sync-alt"></i>
-                </label>
-                <label for="intervalo" aria-label="Intervalo em segundos"><i class="fas fa-clock"></i></label>
-                <input type="number" id="intervalo" value="60" min="5" max="600" step="1" style="width: 40px" aria-label="Intervalo de troca automática">
-                <span id="intervalo-msg">5-600</span>
-                <span id="timer-visual"></span>
-                <button id="trocar-btn" aria-label="Próxima planilha"><i class="fas fa-forward"></i></button>
-                <!-- O botão "Gerar Insights" foi removido daqui -->
+    <main id="app-container" style="opacity:0; transition: opacity 0.8s ease-in;">
+        <div id="card-selection-view">
+            <div class="header">
+                <h1>Painel de Monitoramento</h1>
+                <p style="color:var(--text-secondary)">Selecione um dashboard ou busque pelo nome.</p>
+                <input type="search" id="search-input" placeholder="🔍 Buscar dashboard...">
             </div>
+            <div class="cards-grid" id="spreadsheet-cards-container"></div>
         </div>
-        <iframe id="iframe-container" src="" frameborder="0" title="Planilha selecionada"></iframe>
-        <div id="spinner"><i class="fas fa-spinner fa-spin" style="color:#21aaff"></i></div>
-        <!-- O spinner de insights foi removido daqui -->
 
-        <button id="fullscreen-btn" aria-label="Abrir em tela cheia"><i class="fas fa-expand"></i></button>
-        <audio id="notificacao-audio" src="https://cdn.pixabay.com/audio/2022/03/15/audio_115b9b7b1b.mp3" preload="auto"></audio>
-        <div id="notificacao-visual">Planilha trocada!</div>
+        <div id="monitoring-view">
+            <div class="top-bar">
+                <div class="top-bar-left">
+                    <h1 style="font-size: 1.25em; font-weight: 600; display:flex; align-items:center; gap:0.75rem;"><img src="dafiti.gif" alt="Logo" style="height:32px; border-radius:8px;"> Monitoramento PCP</h1>
+                    <span id="data-hora"></span>
+                </div>
+                <div class="controls">
+                    <button id="back-to-cards-btn" class="btn btn-secondary"><i class="fas fa-arrow-left"></i></button>
+                    <div class="control-group">
+                        <label for="rotation-group-select" title="Grupo de Rotação"><i class="fas fa-layer-group"></i></label>
+                        <select id="rotation-group-select"></select>
+                    </div>
+                    <div class="control-group">
+                        <label class="auto-switch-label" title="Ativar/Desativar Rotação"><input type="checkbox" id="auto-switch" style="display:none;"><i class="fas fa-sync-alt"></i></label>
+                        <label for="intervalo" title="Intervalo (segundos)"><i class="fas fa-clock"></i></label>
+                        <input type="number" id="intervalo" value="60" min="5" max="600" step="1" style="width:60px;">
+                        <span id="timer-visual"></span>
+                    </div>
+                    <button id="config-rotation-btn" class="btn btn-icon btn-secondary" title="Configurar Grupos"><i class="fas fa-cog"></i></button>
+                    <button id="presentation-mode-btn" class="btn btn-icon btn-secondary" title="Modo Apresentação"><i class="fas fa-desktop"></i></button>
+                    <button id="theme-toggle-btn" class="btn btn-icon btn-secondary" title="Alternar Tema"><i class="fas fa-moon"></i></button>
+                </div>
+            </div>
+            <iframe id="iframe-container" src="" frameborder="0"></iframe>
+        </div>
+    </main>
 
-        <!-- O Modal para exibir insights foi removido daqui -->
-        <div id="insights-modal" style="display: none;">
-            <div class="modal-content">
-                <span class="close-button">&times;</span>
-                <h2>Insights da Planilha</h2>
-                <p id="insights-text">Conteúdo de insights.</p>
+    <div id="toast-container"></div>
+    
+    <div id="rotation-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Configurar Grupos de Rotação</h2>
+            <div id="rotation-checklist"></div>
+            <div class="group-actions">
+                 <div style="display:flex; gap: 0.5rem; flex-grow:1;">
+                    <input type="text" id="new-group-name" placeholder="Nome do novo grupo..." style="width:100%">
+                    <button id="save-new-group-btn" class="btn">Criar</button>
+                 </div>
+                 <button id="delete-group-btn" class="btn btn-danger">Excluir Grupo</button>
+            </div>
+            <div class="modal-actions">
+                <button id="close-modal-btn" class="btn btn-secondary">Fechar</button>
+                <button id="save-rotation-btn" class="btn">Salvar Alterações</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Lista de URLs das planilhas com descrições
+    document.addEventListener('DOMContentLoaded', () => {
         const arquivos = [
-            { nome: "Captação - Base p. Data", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3JC5-FEU2jjyEiXATzDqDnPPTUQ1CdJ2Au-VpDIYmn50YVpf41SUUT-Apf1ULsASbLSq56RG6zyh3/pubhtml?gid=1438916736&single=true", description: "" },
-            { nome: "Captação - Base Oficial", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3JC5-FEU2jjyEiXATzDqDnPPTUQ1CdJ2Au-VpDIYmn50YVpf41SUUT-Apf1ULsASbLSq56RG6zyh3/pubhtml?gid=1510322153&single=true", description: "" },
-            { nome: "Cockpit Operações - Processos", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1594703048&single=true", description: "" },
-            { nome: "Cockpit Operações - Retail por grupos", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1646909923&single=true", description: "" },
-            { nome: "Cockpit Operações - Fulfillment por grupos", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1022639883&single=true", description: "" },
-            { nome: "Cockpit Operações - Retail + MR - MR puro por grupos", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=616418256&single=true", description: "" },
-            { nome: "Cockpit Operações - Milk Run", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=116624029&single=true", description: "" },
-            { nome: "Cockpit Operações - Fulffilment", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1540745323&single=true", description: "" },
-            { nome:"Backlog - Inbound", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTFktZyFmfALarBt5jAszR94F1EwAdxzpq10dkIc9diHH0uElrY7sRxGFv9Jke8IPcml2sfMeYaHLKz/pubhtml?gid=577403338&single=true", description: "" },
-            { nome:"Monitoramento DL", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTuW2k1M-gzxULcbPsPhy-I3YYY56TZsx5UYHwNUBrqNBoPWbW71j5WeZncrxe1GR-1bNlfjKJWlKrC/pubhtml?gid=238164626&single=true", description: "" },
-            {nome:"Estoque",url:"https://app.powerbi.com/view?r=eyJrIjoiMDkxMDAwMDYtYjc5My00OTA0LWIyNWUtNGJlZTUxNDdmNjgxIiwidCI6IjEwZmZhYTFiLTA0ZDEtNDBiMC05OTIzLTJmN2ViZmUxMmM1NCJ9", description: ""}
+            { nome: "Captação - Base p. Data", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3JC5-FEU2jjyEiXATzDqDnPPTUQ1CdJ2Au-VpDIYmn50YVpf41SUUT-Apf1ULsASbLSq56RG6zyh3/pubhtml?gid=1438916736&single=true", icon: "fa-tags" },
+            { nome: "Captação - Base Oficial", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3JC5-FEU2jjyEiXATzDqDnPPTUQ1CdJ2Au-VpDIYmn50YVpf41SUUT-Apf1ULsASbLSq56RG6zyh3/pubhtml?gid=1510322153&single=true", icon: "fa-tags" },
+            { nome: "Cockpit - Processos", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1594703048&single=true", icon: "fa-tags" },
+            { nome: "Cockpit - Retail (Grupos)", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1646909923&single=true", icon: "fa-tags" },
+            { nome: "Cockpit Operações - Fulfillment (Grupos)", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1022639883&single=true", icon: "fa-tags" },
+            { nome: "Cockpit Operações - Retail + MR - MR puro (Grupos)", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=616418256&single=true" ,icon: "fa-tags" },
+            { nome: "Cockpit - Fulfillment", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=1022639883&single=true", icon: "fa-tags" },
+            { nome: "Cockpit - Milk Run", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=116624029&single=true", icon: "fa-tags" },
+            { nome: "Backlog - Inbound", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTFktZyFmfALarBt5jAszR94F1EwAdxzpq10dkIc9diHH0uElrY7sRxGFv9Jke8IPcml2sfMeYaHLKz/pubhtml?gid=577403338&single=true", icon: "fa-tags" },
+            { nome: "Monitoramento DL", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTuW2k1M-gzxULcbPsPhy-I3YYY56TZsx5UYHwNUBrqNBoPWbW71j5WeZncrxe1GR-1bNlfjKJWlKrC/pubhtml?gid=238164626&single=true", icon: "fa-tags" },
+            { nome: "Estoque (Power BI)", url:"https://app.powerbi.com/view?r=eyJrIjoiMDkxMDAwMDYtYjc5My00OTA0LWIyNWUtNGJlZTUxNDdmNjgxIiwidCI6IjEwZmZhYTFiLTA0ZDEtNDBiMC05OTIzLTJmN2ViZmUxMmM1NCJ9", icon: "fa-chart-pie" }
         ];
 
-        let indiceAtual = 0;
-        let autoSwitch = false;
-        let intervalo = 60;
-        let intervalId = null;
-        let tempoRestante = intervalo;
-        let timerVisualId = null;
+        // --- Variáveis de Estado ---
+        let indiceAtual = 0, autoSwitch = false, intervalo = 60;
+        let intervalId = null, tempoRestante = intervalo, timerVisualId = null;
+        let rotationGroups = {}, activeGroupName = 'Padrão';
 
-        // Elementos da página de cards
-        const cardSelectionView = document.getElementById('card-selection-view');
-        const spreadsheetCardsContainer = document.getElementById('spreadsheet-cards-container');
+        // --- Elementos DOM (simplificado para brevidade) ---
+        const dom = {
+            splash: document.getElementById('splash'), appContainer: document.getElementById('app-container'),
+            cardSelectionView: document.getElementById('card-selection-view'), spreadsheetCardsContainer: document.getElementById('spreadsheet-cards-container'),
+            searchInput: document.getElementById('search-input'),
+            monitoringView: document.getElementById('monitoring-view'), iframe: document.getElementById('iframe-container'),
+            dataHoraSpan: document.getElementById('data-hora'), backToCardsBtn: document.getElementById('back-to-cards-btn'),
+            rotationGroupSelect: document.getElementById('rotation-group-select'),
+            autoSwitchInput: document.getElementById('auto-switch'), autoSwitchLabel: document.querySelector(".auto-switch-label i"),
+            intervaloInput: document.getElementById("intervalo"), timerSpan: document.getElementById("timer-visual"),
+            configRotationBtn: document.getElementById('config-rotation-btn'), presentationModeBtn: document.getElementById('presentation-mode-btn'),
+            themeToggleBtn: document.getElementById('theme-toggle-btn'), toastContainer: document.getElementById('toast-container'),
+            rotationModal: document.getElementById('rotation-modal'), rotationChecklist: document.getElementById('rotation-checklist'),
+            closeModalBtn: document.getElementById('close-modal-btn'), saveRotationBtn: document.getElementById('save-rotation-btn'),
+            newGroupNameInput: document.getElementById('new-group-name'), saveNewGroupBtn: document.getElementById('save-new-group-btn'),
+            deleteGroupBtn: document.getElementById('delete-group-btn'),
+        };
 
-        // Elementos da página de monitoramento
-        const monitoringView = document.getElementById('monitoring-view');
-        const select = document.getElementById("planilha-select");
-        const iframe = document.getElementById("iframe-container");
-        const spinner = document.getElementById("spinner");
-        const trocarBtn = document.getElementById("trocar-btn");
-        const autoSwitchInput = document.getElementById("auto-switch");
-        const intervaloInput = document.getElementById("intervalo");
-        const intervaloMsg = document.getElementById("intervalo-msg");
-        const fullscreenBtn = document.getElementById("fullscreen-btn");
-        const timerSpan = document.getElementById("timer-visual");
-        const audio = document.getElementById('notificacao-audio');
-        const notif = document.getElementById('notificacao-visual');
-        const dataHoraSpan = document.getElementById('data-hora');
-        const backToCardsBtn = document.getElementById('back-to-cards-btn');
+        // --- Funções Auxiliares ---
+        const showToast = (message, type = 'info') => {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            dom.toastContainer.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        };
 
-
-        // Elementos do modal de insights (mantidos para evitar erros de referência, mas com display: none)
-        const insightsBtn = document.getElementById('insights-btn'); // Este botão foi removido do HTML
-        const insightsModal = document.getElementById('insights-modal');
-        const closeButton = document.querySelector('.close-button');
-        const insightsText = document.getElementById('insights-text');
-        // insightsSpinner foi removido do HTML, mas a variável pode ser mantida para evitar erros ou removida se não for mais usada.
-        // const insightsSpinner = document.getElementById('insights-spinner'); 
-
-        // --- Funções de UI ---
-
-        // Função para alternar entre as views
-        function showView(viewId) {
-            cardSelectionView.style.display = 'none';
-            monitoringView.style.display = 'none';
-
-            if (viewId === 'cards') {
-                cardSelectionView.style.display = 'flex';
-                // Para garantir que o iframe não continue carregando em segundo plano
-                iframe.src = 'about:blank';
-                gerenciarTrocaAutomatica(); // Para a troca automática se estiver ativa
-            } else if (viewId === 'monitor') {
-                monitoringView.style.display = 'flex';
-                // Reinicia a data/hora e o timer visual quando entra na view de monitoramento
-                atualizarDataHora();
-                gerenciarTrocaAutomatica();
-            }
+        const showView = (view) => {
+            dom.cardSelectionView.style.display = view === 'cards' ? 'flex' : 'none';
+            dom.monitoringView.style.display = view === 'monitor' ? 'flex' : 'none';
         }
 
-        // Função para criar um card de planilha
-        function createSpreadsheetCard(item, index) {
-            const cardDiv = document.createElement('div');
-            cardDiv.className = 'card';
-            cardDiv.dataset.index = index; // Armazena o índice para fácil acesso
-
-            const cardIcon = document.createElement('i');
-            cardIcon.className = 'fas fa-chart-bar card-icon'; // Ícone genérico para planilhas
-
-            const cardTitle = document.createElement('h2');
-            cardTitle.className = 'card-title';
-            cardTitle.textContent = item.nome;
-
-            const cardDescription = document.createElement('p');
-            cardDescription.className = 'card-description';
-            cardDescription.textContent = item.description;
-
-            cardDiv.appendChild(cardIcon);
-            cardDiv.appendChild(cardTitle);
-            cardDiv.appendChild(cardDescription);
-
-            // Adiciona event listener para o clique no card
-            cardDiv.addEventListener('click', () => {
-                displayMonitor(index);
-            });
-
-            spreadsheetCardsContainer.appendChild(cardDiv);
-        }
-
-        // Exibe a view de monitoramento com a planilha selecionada
-        function displayMonitor(index) {
-            showView('monitor');
-            mostrarPlanilha(index);
-            // Atualiza o localStorage com o último índice selecionado
-            localStorage.setItem('indiceAtual', index);
-        }
-
-        // --- Funções de Monitoramento PCP (existentes, com pequenas adaptações) ---
-
-        // Data e hora atual
-        function atualizarDataHora() {
-            const agora = new Date();
-            const data = agora.toLocaleDateString('pt-BR');
-            const hora = agora.toLocaleTimeString('pt-BR');
-            dataHoraSpan.textContent = `${data} ${hora}`;
-        }
-        setInterval(atualizarDataHora, 1000); // Atualiza a cada segundo
-
-        // Carrega o estado salvo no localStorage
-        function carregarEstado() {
-            const salvoIndice = localStorage.getItem('indiceAtual');
-            const salvoAuto = localStorage.getItem('autoSwitch');
-            const salvoIntervalo = localStorage.getItem('intervalo');
+        // --- Funções de Estado ---
+        const carregarEstado = () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.body.className = `${savedTheme}-theme`;
+            dom.themeToggleBtn.innerHTML = savedTheme === 'light' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
             
-            if (salvoIndice !== null && !isNaN(Number(salvoIndice)) && Number(salvoIndice) >= 0 && Number(salvoIndice) < arquivos.length) {
-                indiceAtual = Number(salvoIndice);
-            } else {
-                indiceAtual = 0; // Padrão para a primeira planilha se não houver estado salvo ou for inválido
-            }
+            const savedGroups = localStorage.getItem('rotationGroups');
+            rotationGroups = savedGroups ? JSON.parse(savedGroups) : { 'Padrão': arquivos.map((_, i) => i) };
+            activeGroupName = localStorage.getItem('activeGroupName') || 'Padrão';
+            
+            autoSwitch = localStorage.getItem('autoSwitch') === 'true';
+            intervalo = Number(localStorage.getItem('intervalo')) || 60;
+            dom.autoSwitchInput.checked = autoSwitch;
+            dom.intervaloInput.value = intervalo;
 
-            if (salvoAuto !== null) {
-                autoSwitch = salvoAuto === "true";
-                autoSwitchInput.checked = autoSwitch;
-            }
-            if (salvoIntervalo !== null && !isNaN(Number(salvoIntervalo))) {
-                intervalo = Number(salvoIntervalo);
-                intervaloInput.value = intervalo;
-            }
-        }
+            atualizarIconeAutoSwitch();
+            populateGroupSelect();
+        };
 
-        // Salva o estado atual no localStorage
-        function salvarEstado() {
-            localStorage.setItem('indiceAtual', indiceAtual);
+        const salvarEstado = () => {
+            localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+            localStorage.setItem('rotationGroups', JSON.stringify(rotationGroups));
+            localStorage.setItem('activeGroupName', activeGroupName);
             localStorage.setItem('autoSwitch', autoSwitch);
             localStorage.setItem('intervalo', intervalo);
-        }
+        };
+        
+        // --- Funções das Funcionalidades ---
+        const filterCards = () => {
+            const searchTerm = dom.searchInput.value.toLowerCase();
+            const cards = dom.spreadsheetCardsContainer.children;
+            for (const card of cards) {
+                const title = card.querySelector('.card-title').textContent.toLowerCase();
+                card.style.display = title.includes(searchTerm) ? 'flex' : 'none';
+            }
+        };
 
-        // Adiciona uma animação ao iframe quando a planilha é trocada
-        function animarIframe() {
-            iframe.classList.add('anim');
-            setTimeout(() => iframe.classList.remove('anim'), 600);
-        }
-
-        // Mostra a planilha no iframe
-        function mostrarPlanilha(indice) {
-            spinner.style.display = "block";
-            iframe.src = arquivos[indice].url;
-            indiceAtual = indice;
-            select.value = indice;
-            animarIframe();
+        const toggleTheme = () => {
+            document.body.classList.toggle('light-theme');
+            document.body.classList.toggle('dark-theme');
+            const isLight = document.body.classList.contains('light-theme');
+            dom.themeToggleBtn.innerHTML = isLight ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
             salvarEstado();
-        }
+            showToast(`Tema alterado para ${isLight ? 'Claro' : 'Escuro'}`);
+        };
 
-        // Toca um som e mostra uma notificação visual quando a planilha é trocada automaticamente
-        function notificarTroca() {
-            audio.currentTime = 0;
-            audio.play();
-            notif.style.display = 'block';
-            notif.style.opacity = 1;
-            setTimeout(() => {
-                notif.style.opacity = 0;
-                setTimeout(() => {
-                    notif.style.display = 'none';
-                }, 600);
-            }, 900);
-        }
-
-        // Troca para a próxima planilha na lista
-        function proximaPlanilha(auto = false) {
-            let novoIndice = (indiceAtual + 1) % arquivos.length;
-            if (novoIndice === 0 && indiceAtual === arquivos.length - 1) {
-                trocarBtn.classList.add('flash');
-                setTimeout(() => trocarBtn.classList.remove('flash'), 300);
+        const togglePresentationMode = () => {
+            document.body.classList.toggle('presentation-mode');
+            const isInPresMode = document.body.classList.contains('presentation-mode');
+            if (isInPresMode && !document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => console.error(err));
+            } else if (!isInPresMode && document.fullscreenElement) {
+                document.exitFullscreen();
             }
-            mostrarPlanilha(novoIndice);
-            if (auto) notificarTroca();
-            if (auto) {
-                tempoRestante = intervalo;
+        };
+
+        const populateGroupSelect = () => {
+            dom.rotationGroupSelect.innerHTML = '';
+            for (const groupName in rotationGroups) {
+                const option = document.createElement('option');
+                option.value = groupName;
+                option.textContent = groupName;
+                option.selected = groupName === activeGroupName;
+                dom.rotationGroupSelect.appendChild(option);
             }
-        }
+        };
 
-        // Event listeners para a view de monitoramento
-        select.addEventListener("change", function() {
-            mostrarPlanilha(Number(this.value));
-            tempoRestante = intervalo;
-            atualizarTimerVisual();
-        });
-
-        trocarBtn.addEventListener("click", function() {
-            proximaPlanilha(false);
-            tempoRestante = intervalo;
-            atualizarTimerVisual();
-        });
-
-        autoSwitchInput.addEventListener("change", function() {
-            autoSwitch = this.checked;
-            gerenciarTrocaAutomatica();
-            const syncIcon = this.parentElement.querySelector('.fa-sync-alt');
-            if (this.checked) {
-                syncIcon.style.animation = "spin 1s linear infinite";
-                syncIcon.style.color = "#21aaff";
-            } else {
-                syncIcon.style.animation = "none";
-                syncIcon.style.color = "";
-            }
-            salvarEstado();
-        });
-
-        intervaloInput.addEventListener("input", function() {
-            let val = Number(this.value);
-            if (isNaN(val) || val < 5 || val > 600) {
-                this.classList.add('invalid');
-                intervaloMsg.style.display = "inline";
-            } else {
-                this.classList.remove('invalid');
-                intervaloMsg.style.display = "none";
-                intervalo = val;
-                tempoRestante = intervalo;
-                salvarEstado();
-                gerenciarTrocaAutomatica();
-                atualizarTimerVisual();
-            }
-        });
-
-        function atualizarTimerVisual() {
-            if (autoSwitch && !intervaloInput.classList.contains('invalid')) {
-                timerSpan.textContent = `Próx: ${tempoRestante}s`;
-            } else {
-                timerSpan.textContent = '';
-            }
-        }
-
-        function iniciarTimerVisual() {
-            if (timerVisualId) clearInterval(timerVisualId);
-            tempoRestante = intervalo;
-            atualizarTimerVisual();
-            timerVisualId = setInterval(() => {
-                if (!autoSwitch || intervaloInput.classList.contains('invalid')) {
-                    clearInterval(timerVisualId);
-                    timerVisualId = null;
-                    atualizarTimerVisual();
-                    return;
+        const openRotationModal = () => {
+            dom.rotationChecklist.innerHTML = '';
+            const currentGroupList = rotationGroups[activeGroupName] || [];
+            
+            currentGroupList.forEach(index => dom.rotationChecklist.appendChild(createChecklistItem(index, true)));
+            arquivos.forEach((_, index) => {
+                if (!currentGroupList.includes(index)) {
+                    dom.rotationChecklist.appendChild(createChecklistItem(index, false));
                 }
-                tempoRestante--;
-                if (tempoRestante <= 0) tempoRestante = intervalo;
-                atualizarTimerVisual();
-            }, 1000);
-        }
-
-        function gerenciarTrocaAutomatica() {
-            if (intervalId) {
-                clearInterval(intervalId);
-                intervalId = null;
-            }
-            if (timerVisualId) {
-                clearInterval(timerVisualId);
-                timerVisualId = null;
-            }
-            if (autoSwitch && !intervaloInput.classList.contains('invalid')) {
-                intervalId = setInterval(() => proximaPlanilha(true), intervalo * 1000);
-                iniciarTimerVisual();
-            } else {
-                timerSpan.textContent = '';
-            }
-        }
-
-        iframe.addEventListener("load", () => spinner.style.display = "none");
-
-        fullscreenBtn.addEventListener("click", function() {
-            if (iframe.requestFullscreen) {
-                iframe.requestFullscreen();
-            } else if (iframe.webkitRequestFullscreen) {
-                iframe.webkitRequestFullscreen();
-            } else if (iframe.msRequestFullscreen) {
-                iframe.msRequestFullscreen();
-            }
-        });
-
-        function verificarFullscreenBtn() {
-            if (window.innerWidth < 900) {
-                fullscreenBtn.style.display = "flex";
-            } else {
-                fullscreenBtn.style.display = "none";
-            }
-        }
-        window.addEventListener("resize", verificarFullscreenBtn);
-
-        // --- Funções para a integração com a API Gemini (removidas) ---
-        // A função generateInsights e seus event listeners foram removidos.
-
-        // --- Inicialização Geral ---
-        window.addEventListener('load', () => {
-            // Popula os cards na página de seleção
-            arquivos.forEach((item, index) => {
-                createSpreadsheetCard(item, index);
             });
 
-            // Carrega o estado inicial (última planilha visitada ou a primeira)
-            carregarEstado();
+            new Sortable(dom.rotationChecklist, { animation: 150, ghostClass: 'sortable-ghost' });
+            dom.rotationModal.classList.add('visible');
+        };
+        
+        const createChecklistItem = (index, isChecked) => {
+             const item = document.createElement('div');
+             item.className = 'checklist-item';
+             item.innerHTML = `<input type="checkbox" value="${index}" ${isChecked ? 'checked' : ''} style="width:1.2rem; height:1.2rem; accent-color:var(--accent-primary)"><i class="fas ${arquivos[index].icon} fa-fw" style="color:var(--text-secondary)"></i><span>${arquivos[index].nome}</span>`;
+             return item;
+        };
 
-            // Verifica se há um índice de planilha na URL (para compatibilidade, embora agora seja SPA)
-            const urlParams = new URLSearchParams(window.location.search);
-            const sheetIndexFromUrl = urlParams.get('sheetIndex');
+        const saveCurrentGroupChanges = () => {
+            const items = Array.from(dom.rotationChecklist.children);
+            const newList = items
+                .filter(item => item.querySelector('input').checked)
+                .map(item => Number(item.querySelector('input').value));
+            
+            rotationGroups[activeGroupName] = newList;
+            salvarEstado();
+            gerenciarTrocaAutomatica();
+            showToast(`Grupo '${activeGroupName}' atualizado!`, 'success');
+        };
 
-            if (sheetIndexFromUrl !== null && !isNaN(Number(sheetIndexFromUrl)) && Number(sheetIndexFromUrl) >= 0 && Number(sheetIndexFromUrl) < arquivos.length) {
-                // Se houver um índice na URL, vai direto para a view de monitoramento
-                displayMonitor(Number(sheetIndexFromUrl));
-            } else {
-                // Caso contrário, mostra a página de seleção de cards
-                showView('cards');
+        const saveNewGroup = () => {
+            const groupName = dom.newGroupNameInput.value.trim();
+            if (!groupName) return showToast('Por favor, insira um nome para o grupo.', 'warning');
+            if (rotationGroups[groupName]) return showToast('Já existe um grupo com este nome.', 'warning');
+            
+            activeGroupName = groupName;
+            rotationGroups[activeGroupName] = []; // Cria grupo vazio
+            saveCurrentGroupChanges(); // Salva a seleção atual com o novo nome
+            populateGroupSelect();
+            dom.newGroupNameInput.value = '';
+            showToast(`Grupo '${groupName}' criado e salvo!`, 'success');
+        };
+        
+        const deleteActiveGroup = () => {
+            if (Object.keys(rotationGroups).length <= 1) return showToast('Não é possível excluir o último grupo.', 'warning');
+            if (confirm(`Tem certeza que deseja excluir o grupo '${activeGroupName}'?`)) {
+                delete rotationGroups[activeGroupName];
+                activeGroupName = Object.keys(rotationGroups)[0]; // Volta para o primeiro grupo da lista
+                populateGroupSelect();
+                salvarEstado();
+                showToast(`Grupo excluído.`, 'info');
             }
+        };
+        
+        const mostrarPlanilha = (index) => {
+            indiceAtual = index;
+            dom.iframe.src = arquivos[index].url;
+        };
+        
+        const proximaPlanilha = () => {
+            const rotationList = rotationGroups[activeGroupName] || [];
+            if (rotationList.length === 0) return;
+            const currentIndexInRotation = rotationList.indexOf(indiceAtual);
+            const nextIndexInRotation = (currentIndexInRotation === -1 || currentIndexInRotation >= rotationList.length - 1) ? 0 : currentIndexInRotation + 1;
+            mostrarPlanilha(rotationList[nextIndexInRotation]);
+        };
 
-            // Esconde o splash screen depois que a view inicial estiver pronta
-            const splash = document.getElementById('splash');
-            splash.style.opacity = 0;
+        const gerenciarTrocaAutomatica = () => {
+             if (intervalId) clearInterval(intervalId);
+             if (timerVisualId) clearInterval(timerVisualId);
+             
+             const rotationList = rotationGroups[activeGroupName] || [];
+             atualizarTimerVisual();
+             if (autoSwitch && rotationList.length > 0 && !dom.intervaloInput.classList.contains('invalid')) {
+                intervalId = setInterval(proximaPlanilha, intervalo * 1000);
+                tempoRestante = intervalo;
+                timerVisualId = setInterval(() => {
+                    tempoRestante = tempoRestante <= 1 ? intervalo : tempoRestante - 1;
+                    atualizarTimerVisual();
+                }, 1000);
+             }
+        };
+
+        const atualizarTimerVisual = () => {
+            const rotationList = rotationGroups[activeGroupName] || [];
+            dom.timerSpan.textContent = autoSwitch && rotationList.length > 0 ? `${tempoRestante}s` : '';
+        }
+
+        const atualizarIconeAutoSwitch = () => {
+             dom.autoSwitchLabel.style.color = autoSwitch ? 'var(--accent-primary)' : '';
+             dom.autoSwitchLabel.style.animation = autoSwitch ? 'spin 2s linear infinite' : 'none';
+        }
+
+        const createSpreadsheetCard = (item, index) => { 
+             const card = document.createElement('div');
+             card.className = 'card';
+             card.innerHTML = `<i class="fas ${item.icon} card-icon"></i><h2 class="card-title">${item.nome}</h2><p class="card-description">${item.description || ''}</p>`;
+             card.addEventListener('click', () => { showView('monitor'); mostrarPlanilha(index); });
+             dom.spreadsheetCardsContainer.appendChild(card);
+        }
+
+        const init = () => {
+            carregarEstado();
+            arquivos.forEach((item, index) => createSpreadsheetCard(item, index));
+            
+            // Listeners
+            dom.searchInput.addEventListener('input', filterCards);
+            dom.themeToggleBtn.addEventListener('click', toggleTheme);
+            dom.presentationModeBtn.addEventListener('click', togglePresentationMode);
+            document.addEventListener('fullscreenchange', () => {
+                if (!document.fullscreenElement) document.body.classList.remove('presentation-mode');
+            });
+
+            dom.configRotationBtn.addEventListener('click', openRotationModal);
+            dom.closeModalBtn.addEventListener('click', () => dom.rotationModal.classList.remove('visible'));
+            dom.saveRotationBtn.addEventListener('click', () => { saveCurrentGroupChanges(); dom.rotationModal.classList.remove('visible'); });
+            dom.saveNewGroupBtn.addEventListener('click', saveNewGroup);
+            dom.deleteGroupBtn.addEventListener('click', deleteActiveGroup);
+            
+            dom.rotationGroupSelect.addEventListener('change', (e) => {
+                activeGroupName = e.target.value;
+                salvarEstado();
+                gerenciarTrocaAutomatica();
+            });
+            
+            dom.autoSwitchLabel.parentElement.addEventListener('click', () => {
+                autoSwitch = !autoSwitch;
+                dom.autoSwitchInput.checked = autoSwitch;
+                showToast(`Rotação automática ${autoSwitch ? 'iniciada' : 'pausada'}.`, 'info');
+                atualizarIconeAutoSwitch();
+                gerenciarTrocaAutomatica();
+                salvarEstado();
+            });
+
+            dom.intervaloInput.addEventListener('input', () => {
+                const val = Number(dom.intervaloInput.value);
+                if(val >= 5 && val <= 600){
+                    intervalo = val;
+                    salvarEstado();
+                    gerenciarTrocaAutomatica();
+                }
+            });
+
+            dom.backToCardsBtn.addEventListener('click', () => showView('cards'));
+
+            setInterval(() => { dom.dataHoraSpan.textContent = new Date().toLocaleString('pt-BR'); }, 1000);
+            
             setTimeout(() => {
-                splash.style.display = 'none';
-            }, 700); // Dá tempo para a transição de fade out
-        });
+                dom.splash.classList.add('hidden');
+                dom.appContainer.style.opacity = 1;
+            }, 1500);
+        };
 
-        // Event listener para o botão "Voltar" na view de monitoramento
-        backToCardsBtn.addEventListener('click', () => {
-            showView('cards');
-            // Opcional: Limpar o parâmetro sheetIndex da URL se você quiser que o link direto reinicie
-            const url = new URL(window.location.href);
-            url.searchParams.delete('sheetIndex');
-            window.history.pushState({}, '', url.toString()); // Usa toString() para garantir a atualização da URL
-        });
+        init();
+    });
     </script>
 </body>
 </html>
-
