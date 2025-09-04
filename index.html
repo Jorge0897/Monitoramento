@@ -40,7 +40,6 @@
         #splash div { font-size: 1.5em; margin-top: 1.5rem; letter-spacing: 2px; font-weight: 500; animation: fadeInText 1.5s 0.2s ease-out forwards; }
         @keyframes fadeInLogo { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         @keyframes fadeInText { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
         #card-selection-view { display: flex; flex-direction: column; align-items: center; padding: 2rem; min-height: 100vh; width: 100%; box-sizing: border-box; position: relative; overflow-y: auto; }
         .header { text-align: center; margin-bottom: 1rem; width: 100%; max-width: 1400px; }
         .header h1 { font-size: 2.8rem; font-weight: 700; background: linear-gradient(45deg, var(--accent-primary), var(--text-primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; }
@@ -49,11 +48,10 @@
         .card:hover { transform: translateY(-8px); box-shadow: 0 10px 25px var(--shadow-color-hover); border-color: var(--accent-primary); }
         .card-icon { font-size: 3rem; color: var(--accent-primary); margin-bottom: 1rem; }
         .card-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
-        
         #monitoring-view { display: none; width: 100vw; height: 100vh; flex-direction: column; }
         .top-bar { width: 100%; display: flex; align-items: center; justify-content: space-between; background-color: var(--bg-secondary); padding: 0.75rem 1.5rem; box-sizing: border-box; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 1rem; transition: transform 0.4s ease-in-out; }
         body.presentation-mode .top-bar { transform: translateY(-120%); }
-        .top-bar-left, .controls, .control-group { display: flex; align-items: center; gap: 1rem; }
+        .top-bar-left, .controls { display: flex; align-items: center; gap: 1rem; }
         #data-hora { font-size: 0.9em; white-space: nowrap; }
         select, input[type="search"], input[type="text"], input[type="number"] { background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 12px; font-size: 0.95em; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
         .btn { padding: 8px 16px; font-size: 0.95em; background: linear-gradient(90deg, var(--accent-secondary), var(--accent-primary)); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: all 0.2s ease; display: flex; align-items: center; gap: 0.5rem; }
@@ -62,13 +60,11 @@
         .btn.btn-icon { padding: 8px; }
         .btn.btn-danger { background: #EF4444; }
         #iframe-container { flex-grow: 1; border: none; background: #000; }
-        
         #search-input { padding: 10px 15px; width: 100%; max-width: 500px; margin: 1rem auto 2rem; }
         #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
         .toast { padding: 12px 20px; border-radius: 8px; color: #fff; font-weight: 500; box-shadow: 0 4px 15px rgba(0,0,0,0.2); opacity: 0; animation: slideInFadeOut 4s ease-in-out forwards; }
         .toast.success { background-color: #22C55E; } .toast.warning { background-color: #F97316; } .toast.info { background-color: #3B82F6; }
         @keyframes slideInFadeOut { 0%, 100% { opacity: 0; transform: translateY(100%); } 10%, 90% { opacity: 1; transform: translateY(0); } }
-        
         .modal-overlay { position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s; }
         .modal-overlay.visible { opacity: 1; visibility: visible; }
         .modal-content { background-color: var(--bg-secondary); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border-color); width: 90%; max-width: 700px; }
@@ -78,14 +74,6 @@
         .checklist-item:active { cursor: grabbing; }
         .modal-actions, .group-actions { margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
         .sortable-ghost { opacity: 0.4; background: var(--bg-tertiary); }
-        
-        /* --- NOVO ESTILO PARA O INTERRUPTOR (TOGGLE SWITCH) --- */
-        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-tertiary); -webkit-transition: .4s; transition: .4s; border-radius: 34px; border: 1px solid var(--border-color); }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 3px; background-color: white; -webkit-transition: .4s; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--accent-primary); border-color: var(--accent-secondary); }
-        input:checked + .slider:before { -webkit-transform: translateX(24px); -ms-transform: translateX(24px); transform: translateX(24px); }
     </style>
 </head>
 <body class="dark-theme">
@@ -113,12 +101,8 @@
                         <label for="rotation-group-select" title="Grupo de Rotação"><i class="fas fa-layer-group"></i></label>
                         <select id="rotation-group-select"></select>
                     </div>
-                    <div class="control-group" title="Ativar/Desativar Rotação Automática">
-                        <i class="fas fa-sync-alt" id="rotation-icon"></i>
-                        <label class="switch">
-                            <input type="checkbox" id="auto-switch">
-                            <span class="slider"></span>
-                        </label>
+                    <div class="control-group">
+                        <label class="auto-switch-label" title="Ativar/Desativar Rotação"><input type="checkbox" id="auto-switch" style="display:none;"><i class="fas fa-sync-alt"></i></label>
                         <label for="intervalo" title="Intervalo (segundos)"><i class="fas fa-clock"></i></label>
                         <input type="number" id="intervalo" value="60" min="5" max="600" step="1" style="width:60px;">
                         <span id="timer-visual"></span>
@@ -139,11 +123,11 @@
             <h2>Configurar Grupos de Rotação</h2>
             <div id="rotation-checklist"></div>
             <div class="group-actions">
-               <div style="display:flex; gap: 0.5rem; flex-grow:1;">
-                   <input type="text" id="new-group-name" placeholder="Nome do novo grupo..." style="width:100%">
-                   <button id="save-new-group-btn" class="btn">Criar</button>
-               </div>
-               <button id="delete-group-btn" class="btn btn-danger">Excluir Grupo</button>
+                 <div style="display:flex; gap: 0.5rem; flex-grow:1;">
+                    <input type="text" id="new-group-name" placeholder="Nome do novo grupo..." style="width:100%">
+                    <button id="save-new-group-btn" class="btn">Criar</button>
+                 </div>
+                 <button id="delete-group-btn" class="btn btn-danger">Excluir Grupo</button>
             </div>
             <div class="modal-actions">
                 <button id="close-modal-btn" class="btn btn-secondary">Fechar</button>
@@ -168,12 +152,10 @@
             { nome: "Estoque (Power BI)", url:"https://app.powerbi.com/view?r=eyJrIjoiMDkxMDAwMDYtYjc5My00OTA0LWIyNWUtNGJlZTUxNDdmNjgxIiwidCI6IjEwZmZhYTFiLTA0ZDEtNDBiMC05OTIzLTJmN2ViZmUxMmM1NCJ9", icon: "fa-chart-pie" }
         ];
 
-        // --- Variáveis de Estado ---
         let indiceAtual = 0, autoSwitch = false, intervalo = 60;
         let intervalId = null, tempoRestante = intervalo, timerVisualId = null;
         let rotationGroups = {}, activeGroupName = 'Padrão';
 
-        // --- Elementos DOM ---
         const dom = {
             splash: document.getElementById('splash'), appContainer: document.getElementById('app-container'),
             cardSelectionView: document.getElementById('card-selection-view'), spreadsheetCardsContainer: document.getElementById('spreadsheet-cards-container'),
@@ -181,8 +163,7 @@
             monitoringView: document.getElementById('monitoring-view'), iframe: document.getElementById('iframe-container'),
             dataHoraSpan: document.getElementById('data-hora'), backToCardsBtn: document.getElementById('back-to-cards-btn'),
             rotationGroupSelect: document.getElementById('rotation-group-select'),
-            autoSwitchInput: document.getElementById('auto-switch'), 
-            rotationIcon: document.getElementById('rotation-icon'),
+            autoSwitchInput: document.getElementById('auto-switch'), autoSwitchLabel: document.querySelector(".auto-switch-label i"),
             intervaloInput: document.getElementById("intervalo"), timerSpan: document.getElementById("timer-visual"),
             configRotationBtn: document.getElementById('config-rotation-btn'), presentationModeBtn: document.getElementById('presentation-mode-btn'),
             themeToggleBtn: document.getElementById('theme-toggle-btn'), toastContainer: document.getElementById('toast-container'),
@@ -192,7 +173,6 @@
             deleteGroupBtn: document.getElementById('delete-group-btn'),
         };
 
-        // --- Funções Auxiliares ---
         const showToast = (message, type = 'info') => {
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
@@ -206,22 +186,18 @@
             dom.monitoringView.style.display = view === 'monitor' ? 'flex' : 'none';
         }
 
-        // --- Funções de Estado ---
         const carregarEstado = () => {
             const savedTheme = localStorage.getItem('theme') || 'dark';
             document.body.className = `${savedTheme}-theme`;
             dom.themeToggleBtn.innerHTML = savedTheme === 'light' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
-            
             const savedGroups = localStorage.getItem('rotationGroups');
             rotationGroups = savedGroups ? JSON.parse(savedGroups) : { 'Padrão': arquivos.map((_, i) => i) };
             activeGroupName = localStorage.getItem('activeGroupName') || 'Padrão';
-            
             autoSwitch = localStorage.getItem('autoSwitch') === 'true';
             intervalo = Number(localStorage.getItem('intervalo')) || 60;
             dom.autoSwitchInput.checked = autoSwitch;
             dom.intervaloInput.value = intervalo;
-
-            atualizarCorIconeRotacao();
+            atualizarIconeAutoSwitch();
             populateGroupSelect();
         };
 
@@ -233,7 +209,6 @@
             localStorage.setItem('intervalo', intervalo);
         };
         
-        // --- Funções das Funcionalidades ---
         const filterCards = () => {
             const searchTerm = dom.searchInput.value.toLowerCase();
             const cards = dom.spreadsheetCardsContainer.children;
@@ -276,14 +251,12 @@
         const openRotationModal = () => {
             dom.rotationChecklist.innerHTML = '';
             const currentGroupList = rotationGroups[activeGroupName] || [];
-            
             currentGroupList.forEach(index => dom.rotationChecklist.appendChild(createChecklistItem(index, true)));
             arquivos.forEach((_, index) => {
                 if (!currentGroupList.includes(index)) {
                     dom.rotationChecklist.appendChild(createChecklistItem(index, false));
                 }
             });
-
             new Sortable(dom.rotationChecklist, { animation: 150, ghostClass: 'sortable-ghost' });
             dom.rotationModal.classList.add('visible');
         };
@@ -303,7 +276,7 @@
             
             rotationGroups[activeGroupName] = newList;
             salvarEstado();
-            gerenciarTrocaAutomatica(); // Reinicia a rotação com o grupo atualizado
+            gerenciarTrocaAutomatica();
             showToast(`Grupo '${activeGroupName}' atualizado!`, 'success');
         };
 
@@ -313,8 +286,8 @@
             if (rotationGroups[groupName]) return showToast('Já existe um grupo com este nome.', 'warning');
             
             activeGroupName = groupName;
-            rotationGroups[activeGroupName] = []; // Cria grupo vazio
-            saveCurrentGroupChanges(); // Salva a seleção atual (vazia) com o novo nome
+            rotationGroups[activeGroupName] = []; 
+            saveCurrentGroupChanges();
             populateGroupSelect();
             dom.newGroupNameInput.value = '';
             showToast(`Grupo '${groupName}' criado e salvo!`, 'success');
@@ -324,7 +297,7 @@
             if (Object.keys(rotationGroups).length <= 1) return showToast('Não é possível excluir o último grupo.', 'warning');
             if (confirm(`Tem certeza que deseja excluir o grupo '${activeGroupName}'?`)) {
                 delete rotationGroups[activeGroupName];
-                activeGroupName = Object.keys(rotationGroups)[0]; // Volta para o primeiro
+                activeGroupName = Object.keys(rotationGroups)[0];
                 populateGroupSelect();
                 salvarEstado();
                 showToast(`Grupo excluído.`, 'info');
@@ -332,10 +305,8 @@
         };
         
         const mostrarPlanilha = (index) => {
-            if (arquivos[index]) {
-                indiceAtual = index;
-                dom.iframe.src = arquivos[index].url;
-            }
+            indiceAtual = index;
+            dom.iframe.src = arquivos[index].url;
         };
         
         const proximaPlanilha = () => {
@@ -352,14 +323,13 @@
              
              const rotationList = rotationGroups[activeGroupName] || [];
              atualizarTimerVisual();
-
              if (autoSwitch && rotationList.length > 0) {
-                 intervalId = setInterval(proximaPlanilha, intervalo * 1000);
-                 tempoRestante = intervalo;
-                 timerVisualId = setInterval(() => {
-                     tempoRestante = tempoRestante <= 1 ? intervalo : tempoRestante - 1;
-                     atualizarTimerVisual();
-                 }, 1000);
+                intervalId = setInterval(proximaPlanilha, intervalo * 1000);
+                tempoRestante = intervalo;
+                timerVisualId = setInterval(() => {
+                    tempoRestante = tempoRestante <= 1 ? intervalo : tempoRestante - 1;
+                    atualizarTimerVisual();
+                }, 1000);
              }
         };
 
@@ -368,20 +338,16 @@
             dom.timerSpan.textContent = autoSwitch && rotationList.length > 0 ? `${tempoRestante}s` : '';
         }
 
-        const atualizarCorIconeRotacao = () => {
-             dom.rotationIcon.style.color = autoSwitch ? 'var(--accent-primary)' : 'var(--text-secondary)';
+        const atualizarIconeAutoSwitch = () => {
+             dom.autoSwitchLabel.style.color = autoSwitch ? 'var(--accent-primary)' : '';
+             dom.autoSwitchLabel.style.animation = autoSwitch ? 'spin 2s linear infinite' : 'none';
         }
 
         const createSpreadsheetCard = (item, index) => { 
              const card = document.createElement('div');
              card.className = 'card';
-             card.innerHTML = `<i class="fas ${item.icon} card-icon"></i><h2 class="card-title">${item.nome}</h2>`;
-             card.addEventListener('click', () => { 
-                showView('monitor'); 
-                mostrarPlanilha(index); 
-                // Ao clicar num card, a rotação deve começar se estiver ativa
-                gerenciarTrocaAutomatica();
-            });
+             card.innerHTML = `<i class="fas ${item.icon} card-icon"></i><h2 class="card-title">${item.nome}</h2><p class="card-description">${item.description || ''}</p>`;
+             card.addEventListener('click', () => { showView('monitor'); mostrarPlanilha(index); });
              dom.spreadsheetCardsContainer.appendChild(card);
         }
 
@@ -389,8 +355,6 @@
             carregarEstado();
             arquivos.forEach((item, index) => createSpreadsheetCard(item, index));
             
-            // --- LISTENERS (OUVINTES DE EVENTOS) ---
-
             dom.searchInput.addEventListener('input', filterCards);
             dom.themeToggleBtn.addEventListener('click', toggleTheme);
             dom.presentationModeBtn.addEventListener('click', togglePresentationMode);
@@ -407,30 +371,24 @@
             dom.rotationGroupSelect.addEventListener('change', (e) => {
                 activeGroupName = e.target.value;
                 salvarEstado();
-                // Mostra a primeira planilha do novo grupo selecionado
-                const firstInGroup = rotationGroups[activeGroupName]?.[0];
-                if(firstInGroup !== undefined) mostrarPlanilha(firstInGroup);
                 gerenciarTrocaAutomatica();
             });
             
-            // LÓGICA DO INTERRUPTOR DE ROTAÇÃO (CORRIGIDO)
-            dom.autoSwitchInput.addEventListener('change', () => {
-                autoSwitch = dom.autoSwitchInput.checked;
-                showToast(`Rotação automática ${autoSwitch ? 'ativada' : 'desativada'}.`, 'info');
-                atualizarCorIconeRotacao();
+            dom.autoSwitchLabel.parentElement.addEventListener('click', () => {
+                autoSwitch = !autoSwitch;
+                dom.autoSwitchInput.checked = autoSwitch;
+                showToast(`Rotação automática ${autoSwitch ? 'iniciada' : 'pausada'}.`, 'info');
+                atualizarIconeAutoSwitch();
                 gerenciarTrocaAutomatica();
                 salvarEstado();
             });
 
-            dom.intervaloInput.addEventListener('change', () => { // Usar 'change' é melhor que 'input'
+            dom.intervaloInput.addEventListener('input', () => {
                 const val = Number(dom.intervaloInput.value);
                 if(val >= 5 && val <= 600){
                     intervalo = val;
                     salvarEstado();
-                    gerenciarTrocaAutomatica(); // Reinicia o timer com o novo valor
-                } else {
-                    showToast('Intervalo deve ser entre 5 e 600 segundos.', 'warning');
-                    dom.intervaloInput.value = intervalo; // Restaura o valor válido anterior
+                    gerenciarTrocaAutomatica();
                 }
             });
 
@@ -446,6 +404,20 @@
 
         init();
     });
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registrado com sucesso:', registration);
+                    })
+                    .catch(error => {
+                        console.log('❌ Falha ao registrar o Service Worker:', error);
+                    });
+            });
+        }
     </script>
 </body>
 </html>
