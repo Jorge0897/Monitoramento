@@ -34,6 +34,7 @@
             transition: background-color 0.3s, color 0.3s;
         }
         
+        /* ... Estilos anteriores ... */
         #splash { position: fixed; inset: 0; background: var(--bg-primary); z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; transition: opacity 0.8s ease-out, visibility 0.8s; }
         #splash.hidden { opacity: 0; visibility: hidden; }
         #splash img { width: 180px; border-radius: 1rem; box-shadow: 0 0 30px rgba(0,0,0,0.5); animation: fadeInLogo 1.5s ease-out forwards; }
@@ -60,6 +61,8 @@
         .btn.btn-icon { padding: 8px; }
         .btn.btn-danger { background: #EF4444; }
         #iframe-container { flex-grow: 1; border: none; background: #000; }
+        
+        /* ESTILOS PARA NOVAS FUNCIONALIDADES */
         #search-input { padding: 10px 15px; width: 100%; max-width: 500px; margin: 1rem auto 2rem; }
         #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
         .toast { padding: 12px 20px; border-radius: 8px; color: #fff; font-weight: 500; box-shadow: 0 4px 15px rgba(0,0,0,0.2); opacity: 0; animation: slideInFadeOut 4s ease-in-out forwards; }
@@ -149,13 +152,16 @@
             { nome: "Cockpit - Milk Run", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=116624029&single=true", icon: "fa-tags" },
             { nome: "Backlog - Inbound", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTFktZyFmfALarBt5jAszR94F1EwAdxzpq10dkIc9diHH0uElrY7sRxGFv9Jke8IPcml2sfMeYaHLKz/pubhtml?gid=577403338&single=true", icon: "fa-tags" },
             { nome: "Monitoramento DL", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTuW2k1M-gzxULcbPsPhy-I3YYY56TZsx5UYHwNUBrqNBoPWbW71j5WeZncrxe1GR-1bNlfjKJWlKrC/pubhtml?gid=238164626&single=true", icon: "fa-tags" },
-            { nome: "Estoque (Power BI)", url:"https://app.powerbi.com/view?r=eyJrIjoiMDkxMDAwMDYtYjc5My00OTA0LWIyNWUtNGJlZTUxNDdmNjgxIiwidCI6IjEwZmZhYTFiLTA0ZDEtNDBiMC05OTIzLTJmN2ViZmUxMmM1NCJ9", icon: "fa-chart-pie" }
+            { nome: "Estoque (Power BI)", url:"https://app.powerbi.com/view?r=eyJrIjoiMDkxMDAwMDYtYjc5My00OTA0LWIyNWUtNGJlZTUxNDdmNjgxIiwidCI6IjEwZmZhYTFiLTA0ZDEtNDBiMC05OTIzLTJmN2ViZmUxMmM1NCJ9", icon: "fa-chart-pie" },
+            { nome: "Teste Produção", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTRZZNFq4MpxAWAz9NGyRq4sG3xT98JubwL3fktVzsKJFI7EHApxgLOffhKKB_d-dZSQzaslfm0WFVa/pubhtml?gid=1811419874&single=true", icon: "fa-chart-pie" }
         ];
 
+        // --- Variáveis de Estado ---
         let indiceAtual = 0, autoSwitch = false, intervalo = 60;
         let intervalId = null, tempoRestante = intervalo, timerVisualId = null;
         let rotationGroups = {}, activeGroupName = 'Padrão';
 
+        // --- Elementos DOM (simplificado para brevidade) ---
         const dom = {
             splash: document.getElementById('splash'), appContainer: document.getElementById('app-container'),
             cardSelectionView: document.getElementById('card-selection-view'), spreadsheetCardsContainer: document.getElementById('spreadsheet-cards-container'),
@@ -173,6 +179,7 @@
             deleteGroupBtn: document.getElementById('delete-group-btn'),
         };
 
+        // --- Funções Auxiliares ---
         const showToast = (message, type = 'info') => {
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
@@ -186,17 +193,21 @@
             dom.monitoringView.style.display = view === 'monitor' ? 'flex' : 'none';
         }
 
+        // --- Funções de Estado ---
         const carregarEstado = () => {
             const savedTheme = localStorage.getItem('theme') || 'dark';
             document.body.className = `${savedTheme}-theme`;
             dom.themeToggleBtn.innerHTML = savedTheme === 'light' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+            
             const savedGroups = localStorage.getItem('rotationGroups');
             rotationGroups = savedGroups ? JSON.parse(savedGroups) : { 'Padrão': arquivos.map((_, i) => i) };
             activeGroupName = localStorage.getItem('activeGroupName') || 'Padrão';
+            
             autoSwitch = localStorage.getItem('autoSwitch') === 'true';
             intervalo = Number(localStorage.getItem('intervalo')) || 60;
             dom.autoSwitchInput.checked = autoSwitch;
             dom.intervaloInput.value = intervalo;
+
             atualizarIconeAutoSwitch();
             populateGroupSelect();
         };
@@ -209,6 +220,7 @@
             localStorage.setItem('intervalo', intervalo);
         };
         
+        // --- Funções das Funcionalidades ---
         const filterCards = () => {
             const searchTerm = dom.searchInput.value.toLowerCase();
             const cards = dom.spreadsheetCardsContainer.children;
@@ -251,12 +263,14 @@
         const openRotationModal = () => {
             dom.rotationChecklist.innerHTML = '';
             const currentGroupList = rotationGroups[activeGroupName] || [];
+            
             currentGroupList.forEach(index => dom.rotationChecklist.appendChild(createChecklistItem(index, true)));
             arquivos.forEach((_, index) => {
                 if (!currentGroupList.includes(index)) {
                     dom.rotationChecklist.appendChild(createChecklistItem(index, false));
                 }
             });
+
             new Sortable(dom.rotationChecklist, { animation: 150, ghostClass: 'sortable-ghost' });
             dom.rotationModal.classList.add('visible');
         };
@@ -286,8 +300,8 @@
             if (rotationGroups[groupName]) return showToast('Já existe um grupo com este nome.', 'warning');
             
             activeGroupName = groupName;
-            rotationGroups[activeGroupName] = []; 
-            saveCurrentGroupChanges();
+            rotationGroups[activeGroupName] = []; // Cria grupo vazio
+            saveCurrentGroupChanges(); // Salva a seleção atual com o novo nome
             populateGroupSelect();
             dom.newGroupNameInput.value = '';
             showToast(`Grupo '${groupName}' criado e salvo!`, 'success');
@@ -297,7 +311,7 @@
             if (Object.keys(rotationGroups).length <= 1) return showToast('Não é possível excluir o último grupo.', 'warning');
             if (confirm(`Tem certeza que deseja excluir o grupo '${activeGroupName}'?`)) {
                 delete rotationGroups[activeGroupName];
-                activeGroupName = Object.keys(rotationGroups)[0];
+                activeGroupName = Object.keys(rotationGroups)[0]; // Volta para o primeiro grupo da lista
                 populateGroupSelect();
                 salvarEstado();
                 showToast(`Grupo excluído.`, 'info');
@@ -323,7 +337,7 @@
              
              const rotationList = rotationGroups[activeGroupName] || [];
              atualizarTimerVisual();
-             if (autoSwitch && rotationList.length > 0) {
+             if (autoSwitch && rotationList.length > 0 && !dom.intervaloInput.classList.contains('invalid')) {
                 intervalId = setInterval(proximaPlanilha, intervalo * 1000);
                 tempoRestante = intervalo;
                 timerVisualId = setInterval(() => {
@@ -355,6 +369,7 @@
             carregarEstado();
             arquivos.forEach((item, index) => createSpreadsheetCard(item, index));
             
+            // Listeners
             dom.searchInput.addEventListener('input', filterCards);
             dom.themeToggleBtn.addEventListener('click', toggleTheme);
             dom.presentationModeBtn.addEventListener('click', togglePresentationMode);
@@ -404,20 +419,6 @@
 
         init();
     });
-    </script>
-
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => {
-                        console.log('✅ Service Worker registrado com sucesso:', registration);
-                    })
-                    .catch(error => {
-                        console.log('❌ Falha ao registrar o Service Worker:', error);
-                    });
-            });
-        }
     </script>
 </body>
 </html>
