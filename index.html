@@ -34,13 +34,14 @@
             transition: background-color 0.3s, color 0.3s;
         }
         
-        /* ... Estilos anteriores ... */
         #splash { position: fixed; inset: 0; background: var(--bg-primary); z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; transition: opacity 0.8s ease-out, visibility 0.8s; }
         #splash.hidden { opacity: 0; visibility: hidden; }
         #splash img { width: 180px; border-radius: 1rem; box-shadow: 0 0 30px rgba(0,0,0,0.5); animation: fadeInLogo 1.5s ease-out forwards; }
         #splash div { font-size: 1.5em; margin-top: 1.5rem; letter-spacing: 2px; font-weight: 500; animation: fadeInText 1.5s 0.2s ease-out forwards; }
         @keyframes fadeInLogo { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         @keyframes fadeInText { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
         #card-selection-view { display: flex; flex-direction: column; align-items: center; padding: 2rem; min-height: 100vh; width: 100%; box-sizing: border-box; position: relative; overflow-y: auto; }
         .header { text-align: center; margin-bottom: 1rem; width: 100%; max-width: 1400px; }
         .header h1 { font-size: 2.8rem; font-weight: 700; background: linear-gradient(45deg, var(--accent-primary), var(--text-primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; }
@@ -53,6 +54,10 @@
         .top-bar { width: 100%; display: flex; align-items: center; justify-content: space-between; background-color: var(--bg-secondary); padding: 0.75rem 1.5rem; box-sizing: border-box; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 1rem; transition: transform 0.4s ease-in-out; }
         body.presentation-mode .top-bar { transform: translateY(-120%); }
         .top-bar-left, .controls { display: flex; align-items: center; gap: 1rem; }
+        
+        /* ALTERAÇÃO: Adicionado flex e gap para espaçamento interno dos grupos de controle */
+        .control-group { display: flex; align-items: center; gap: 0.5rem; }
+
         #data-hora { font-size: 0.9em; white-space: nowrap; }
         select, input[type="search"], input[type="text"], input[type="number"] { background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 12px; font-size: 0.95em; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
         .btn { padding: 8px 16px; font-size: 0.95em; background: linear-gradient(90deg, var(--accent-secondary), var(--accent-primary)); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: all 0.2s ease; display: flex; align-items: center; gap: 0.5rem; }
@@ -61,8 +66,6 @@
         .btn.btn-icon { padding: 8px; }
         .btn.btn-danger { background: #EF4444; }
         #iframe-container { flex-grow: 1; border: none; background: #000; }
-        
-        /* ESTILOS PARA NOVAS FUNCIONALIDADES */
         #search-input { padding: 10px 15px; width: 100%; max-width: 500px; margin: 1rem auto 2rem; }
         #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
         .toast { padding: 12px 20px; border-radius: 8px; color: #fff; font-weight: 500; box-shadow: 0 4px 15px rgba(0,0,0,0.2); opacity: 0; animation: slideInFadeOut 4s ease-in-out forwards; }
@@ -99,7 +102,12 @@
                     <span id="data-hora"></span>
                 </div>
                 <div class="controls">
-                    <button id="back-to-cards-btn" class="btn btn-secondary"><i class="fas fa-arrow-left"></i></button>
+                    <button id="back-to-cards-btn" class="btn btn-secondary" title="Voltar" aria-label="Voltar para a seleção de cards"><i class="fas fa-arrow-left"></i></button>
+                    <button id="reload-iframe-btn" class="btn btn-icon btn-secondary" title="Recarregar Dashboard" aria-label="Recarregar Dashboard"><i class="fas fa-redo"></i></button>
+
+                    <button id="prev-btn" class="btn btn-icon btn-secondary" title="Dashboard Anterior" aria-label="Ir para o dashboard anterior"><i class="fas fa-arrow-left"></i></button>
+                    <button id="next-btn" class="btn btn-icon btn-secondary" title="Próximo Dashboard" aria-label="Ir para o próximo dashboard"><i class="fas fa-arrow-right"></i></button>
+
                     <div class="control-group">
                         <label for="rotation-group-select" title="Grupo de Rotação"><i class="fas fa-layer-group"></i></label>
                         <select id="rotation-group-select"></select>
@@ -108,11 +116,17 @@
                         <label class="auto-switch-label" title="Ativar/Desativar Rotação"><input type="checkbox" id="auto-switch" style="display:none;"><i class="fas fa-sync-alt"></i></label>
                         <label for="intervalo" title="Intervalo (segundos)"><i class="fas fa-clock"></i></label>
                         <input type="number" id="intervalo" value="60" min="5" max="600" step="1" style="width:60px;">
-                        <span id="timer-visual"></span>
+                        <div id="timer-visual-container" style="position:relative; width:24px; height:24px;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" style="transform: rotate(-90deg);">
+                                <circle cx="12" cy="12" r="10" fill="none" stroke="var(--bg-tertiary)" stroke-width="3"></circle>
+                                <circle id="timer-progress" cx="12" cy="12" r="10" fill="none" stroke="var(--accent-primary)" stroke-width="3" stroke-dasharray="62.83" stroke-dashoffset="62.83"></circle>
+                            </svg>
+                            <span id="timer-text" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:10px; font-weight:bold;"></span>
+                        </div>
                     </div>
-                    <button id="config-rotation-btn" class="btn btn-icon btn-secondary" title="Configurar Grupos"><i class="fas fa-cog"></i></button>
-                    <button id="presentation-mode-btn" class="btn btn-icon btn-secondary" title="Modo Apresentação"><i class="fas fa-desktop"></i></button>
-                    <button id="theme-toggle-btn" class="btn btn-icon btn-secondary" title="Alternar Tema"><i class="fas fa-moon"></i></button>
+                    <button id="config-rotation-btn" class="btn btn-icon btn-secondary" title="Configurar Grupos" aria-label="Configurar Grupos de Rotação"><i class="fas fa-cog"></i></button>
+                    <button id="presentation-mode-btn" class="btn btn-icon btn-secondary" title="Modo Apresentação" aria-label="Ativar Modo Apresentação"><i class="fas fa-desktop"></i></button>
+                    <button id="theme-toggle-btn" class="btn btn-icon btn-secondary" title="Alternar Tema" aria-label="Alternar Tema Claro/Escuro"><i class="fas fa-moon"></i></button>
                 </div>
             </div>
             <iframe id="iframe-container" src="" frameborder="0"></iframe>
@@ -127,8 +141,8 @@
             <div id="rotation-checklist"></div>
             <div class="group-actions">
                  <div style="display:flex; gap: 0.5rem; flex-grow:1;">
-                    <input type="text" id="new-group-name" placeholder="Nome do novo grupo..." style="width:100%">
-                    <button id="save-new-group-btn" class="btn">Criar</button>
+                     <input type="text" id="new-group-name" placeholder="Nome do novo grupo..." style="width:100%">
+                     <button id="save-new-group-btn" class="btn">Criar</button>
                  </div>
                  <button id="delete-group-btn" class="btn btn-danger">Excluir Grupo</button>
             </div>
@@ -152,16 +166,13 @@
             { nome: "Cockpit - Milk Run", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKjdrUXdCJiDbv7WVfR8p0cs5O0DR_0yQodEgb2QSDeyNiWAE96TNjQZUD_il5KuN2y3LmAbL3IfZx/pubhtml?gid=116624029&single=true", icon: "fa-tags" },
             { nome: "Backlog - Inbound", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTFktZyFmfALarBt5jAszR94F1EwAdxzpq10dkIc9diHH0uElrY7sRxGFv9Jke8IPcml2sfMeYaHLKz/pubhtml?gid=577403338&single=true", icon: "fa-tags" },
             { nome: "Monitoramento DL", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTuW2k1M-gzxULcbPsPhy-I3YYY56TZsx5UYHwNUBrqNBoPWbW71j5WeZncrxe1GR-1bNlfjKJWlKrC/pubhtml?gid=238164626&single=true", icon: "fa-tags" },
-            { nome: "Estoque (Power BI)", url:"https://app.powerbi.com/view?r=eyJrIjoiMDkxMDAwMDYtYjc5My00OTA0LWIyNWUtNGJlZTUxNDdmNjgxIiwidCI6IjEwZmZhYTFiLTA0ZDEtNDBiMC05OTIzLTJmN2ViZmUxMmM1NCJ9", icon: "fa-chart-pie" },
-            { nome: "Teste Produção", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTRZZNFq4MpxAWAz9NGyRq4sG3xT98JubwL3fktVzsKJFI7EHApxgLOffhKKB_d-dZSQzaslfm0WFVa/pubhtml?gid=1811419874&single=true", icon: "fa-chart-pie" }
+            { nome: "Estoque (Power BI)", url:"https://app.powerbi.com/view?r=eyJrIjoiMDkxMDAwMDYtYjc5My00OTA0LWIyNWUtNGJlZTUxNDdmNjgxIiwidCI6IjEwZmZhYTFiLTA0ZDEtNDBiMC05OTIzLTJmN2ViZmUxMmM1NCJ9", icon: "fa-chart-pie" }
         ];
 
-        // --- Variáveis de Estado ---
         let indiceAtual = 0, autoSwitch = false, intervalo = 60;
         let intervalId = null, tempoRestante = intervalo, timerVisualId = null;
         let rotationGroups = {}, activeGroupName = 'Padrão';
 
-        // --- Elementos DOM (simplificado para brevidade) ---
         const dom = {
             splash: document.getElementById('splash'), appContainer: document.getElementById('app-container'),
             cardSelectionView: document.getElementById('card-selection-view'), spreadsheetCardsContainer: document.getElementById('spreadsheet-cards-container'),
@@ -170,16 +181,20 @@
             dataHoraSpan: document.getElementById('data-hora'), backToCardsBtn: document.getElementById('back-to-cards-btn'),
             rotationGroupSelect: document.getElementById('rotation-group-select'),
             autoSwitchInput: document.getElementById('auto-switch'), autoSwitchLabel: document.querySelector(".auto-switch-label i"),
-            intervaloInput: document.getElementById("intervalo"), timerSpan: document.getElementById("timer-visual"),
+            intervaloInput: document.getElementById("intervalo"),
             configRotationBtn: document.getElementById('config-rotation-btn'), presentationModeBtn: document.getElementById('presentation-mode-btn'),
             themeToggleBtn: document.getElementById('theme-toggle-btn'), toastContainer: document.getElementById('toast-container'),
             rotationModal: document.getElementById('rotation-modal'), rotationChecklist: document.getElementById('rotation-checklist'),
             closeModalBtn: document.getElementById('close-modal-btn'), saveRotationBtn: document.getElementById('save-rotation-btn'),
             newGroupNameInput: document.getElementById('new-group-name'), saveNewGroupBtn: document.getElementById('save-new-group-btn'),
             deleteGroupBtn: document.getElementById('delete-group-btn'),
+            reloadIframeBtn: document.getElementById('reload-iframe-btn'),
+            timerProgress: document.getElementById('timer-progress'),
+            timerText: document.getElementById('timer-text'),
+            prevBtn: document.getElementById('prev-btn'),
+            nextBtn: document.getElementById('next-btn'),
         };
 
-        // --- Funções Auxiliares ---
         const showToast = (message, type = 'info') => {
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
@@ -193,21 +208,17 @@
             dom.monitoringView.style.display = view === 'monitor' ? 'flex' : 'none';
         }
 
-        // --- Funções de Estado ---
         const carregarEstado = () => {
             const savedTheme = localStorage.getItem('theme') || 'dark';
             document.body.className = `${savedTheme}-theme`;
             dom.themeToggleBtn.innerHTML = savedTheme === 'light' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
-            
             const savedGroups = localStorage.getItem('rotationGroups');
             rotationGroups = savedGroups ? JSON.parse(savedGroups) : { 'Padrão': arquivos.map((_, i) => i) };
             activeGroupName = localStorage.getItem('activeGroupName') || 'Padrão';
-            
             autoSwitch = localStorage.getItem('autoSwitch') === 'true';
             intervalo = Number(localStorage.getItem('intervalo')) || 60;
             dom.autoSwitchInput.checked = autoSwitch;
             dom.intervaloInput.value = intervalo;
-
             atualizarIconeAutoSwitch();
             populateGroupSelect();
         };
@@ -220,7 +231,6 @@
             localStorage.setItem('intervalo', intervalo);
         };
         
-        // --- Funções das Funcionalidades ---
         const filterCards = () => {
             const searchTerm = dom.searchInput.value.toLowerCase();
             const cards = dom.spreadsheetCardsContainer.children;
@@ -263,14 +273,12 @@
         const openRotationModal = () => {
             dom.rotationChecklist.innerHTML = '';
             const currentGroupList = rotationGroups[activeGroupName] || [];
-            
             currentGroupList.forEach(index => dom.rotationChecklist.appendChild(createChecklistItem(index, true)));
             arquivos.forEach((_, index) => {
                 if (!currentGroupList.includes(index)) {
                     dom.rotationChecklist.appendChild(createChecklistItem(index, false));
                 }
             });
-
             new Sortable(dom.rotationChecklist, { animation: 150, ghostClass: 'sortable-ghost' });
             dom.rotationModal.classList.add('visible');
         };
@@ -300,8 +308,8 @@
             if (rotationGroups[groupName]) return showToast('Já existe um grupo com este nome.', 'warning');
             
             activeGroupName = groupName;
-            rotationGroups[activeGroupName] = []; // Cria grupo vazio
-            saveCurrentGroupChanges(); // Salva a seleção atual com o novo nome
+            rotationGroups[activeGroupName] = []; 
+            saveCurrentGroupChanges();
             populateGroupSelect();
             dom.newGroupNameInput.value = '';
             showToast(`Grupo '${groupName}' criado e salvo!`, 'success');
@@ -311,7 +319,7 @@
             if (Object.keys(rotationGroups).length <= 1) return showToast('Não é possível excluir o último grupo.', 'warning');
             if (confirm(`Tem certeza que deseja excluir o grupo '${activeGroupName}'?`)) {
                 delete rotationGroups[activeGroupName];
-                activeGroupName = Object.keys(rotationGroups)[0]; // Volta para o primeiro grupo da lista
+                activeGroupName = Object.keys(rotationGroups)[0];
                 populateGroupSelect();
                 salvarEstado();
                 showToast(`Grupo excluído.`, 'info');
@@ -330,32 +338,57 @@
             const nextIndexInRotation = (currentIndexInRotation === -1 || currentIndexInRotation >= rotationList.length - 1) ? 0 : currentIndexInRotation + 1;
             mostrarPlanilha(rotationList[nextIndexInRotation]);
         };
+        
+        const planilhaAnterior = () => {
+            const rotationList = rotationGroups[activeGroupName] || [];
+            if (rotationList.length === 0) return;
+            const currentIndexInRotation = rotationList.indexOf(indiceAtual);
+            const prevIndexInRotation = (currentIndexInRotation <= 0) ? rotationList.length - 1 : currentIndexInRotation - 1;
+            mostrarPlanilha(rotationList[prevIndexInRotation]);
+        };
 
         const gerenciarTrocaAutomatica = () => {
              if (intervalId) clearInterval(intervalId);
              if (timerVisualId) clearInterval(timerVisualId);
              
              const rotationList = rotationGroups[activeGroupName] || [];
-             atualizarTimerVisual();
-             if (autoSwitch && rotationList.length > 0 && !dom.intervaloInput.classList.contains('invalid')) {
-                intervalId = setInterval(proximaPlanilha, intervalo * 1000);
-                tempoRestante = intervalo;
-                timerVisualId = setInterval(() => {
-                    tempoRestante = tempoRestante <= 1 ? intervalo : tempoRestante - 1;
-                    atualizarTimerVisual();
-                }, 1000);
+             atualizarTimerVisual(); 
+             if (autoSwitch && rotationList.length > 0) {
+                 intervalId = setInterval(proximaPlanilha, intervalo * 1000);
+                 tempoRestante = intervalo;
+                 timerVisualId = setInterval(() => {
+                     tempoRestante = tempoRestante <= 1 ? intervalo : tempoRestante - 1;
+                     atualizarTimerVisual();
+                 }, 1000);
              }
         };
 
         const atualizarTimerVisual = () => {
+            const radius = dom.timerProgress.r.baseVal.value;
+            const circumference = 2 * Math.PI * radius;
             const rotationList = rotationGroups[activeGroupName] || [];
-            dom.timerSpan.textContent = autoSwitch && rotationList.length > 0 ? `${tempoRestante}s` : '';
-        }
+            const shouldShowTimer = autoSwitch && rotationList.length > 0;
+            if (shouldShowTimer) {
+                const offset = circumference - (tempoRestante / intervalo) * circumference;
+                dom.timerProgress.style.strokeDashoffset = offset;
+                dom.timerText.textContent = `${tempoRestante}s`;
+            } else {
+                dom.timerProgress.style.strokeDashoffset = circumference;
+                dom.timerText.textContent = '';
+            }
+        };
 
         const atualizarIconeAutoSwitch = () => {
              dom.autoSwitchLabel.style.color = autoSwitch ? 'var(--accent-primary)' : '';
              dom.autoSwitchLabel.style.animation = autoSwitch ? 'spin 2s linear infinite' : 'none';
         }
+
+        const reloadCurrentIframe = () => {
+            if (dom.iframe.src) {
+                dom.iframe.src = dom.iframe.src;
+                showToast('Dashboard recarregado!', 'info');
+            }
+        };
 
         const createSpreadsheetCard = (item, index) => { 
              const card = document.createElement('div');
@@ -369,10 +402,20 @@
             carregarEstado();
             arquivos.forEach((item, index) => createSpreadsheetCard(item, index));
             
-            // Listeners
             dom.searchInput.addEventListener('input', filterCards);
             dom.themeToggleBtn.addEventListener('click', toggleTheme);
             dom.presentationModeBtn.addEventListener('click', togglePresentationMode);
+            dom.reloadIframeBtn.addEventListener('click', reloadCurrentIframe);
+
+            dom.nextBtn.addEventListener('click', () => {
+                proximaPlanilha();
+                gerenciarTrocaAutomatica();
+            });
+            dom.prevBtn.addEventListener('click', () => {
+                planilhaAnterior();
+                gerenciarTrocaAutomatica();
+            });
+
             document.addEventListener('fullscreenchange', () => {
                 if (!document.fullscreenElement) document.body.classList.remove('presentation-mode');
             });
@@ -389,7 +432,7 @@
                 gerenciarTrocaAutomatica();
             });
             
-            dom.autoSwitchLabel.parentElement.addEventListener('click', () => {
+            dom.autoSwitchLabel.addEventListener('click', () => {
                 autoSwitch = !autoSwitch;
                 dom.autoSwitchInput.checked = autoSwitch;
                 showToast(`Rotação automática ${autoSwitch ? 'iniciada' : 'pausada'}.`, 'info');
@@ -402,6 +445,7 @@
                 const val = Number(dom.intervaloInput.value);
                 if(val >= 5 && val <= 600){
                     intervalo = val;
+                    tempoRestante = val;
                     salvarEstado();
                     gerenciarTrocaAutomatica();
                 }
